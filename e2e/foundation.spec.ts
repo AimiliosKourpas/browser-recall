@@ -53,11 +53,30 @@ test('does not touch ordinary web pages (no content scripts in M1)', async ({ co
 
 test('locked CSP: no outbound request leaves any extension page', async ({ context, extensionId, server }) => {
   const page = await openExtensionPage(context, extensionId, 'search.html');
-  const probe = (kind: string) => `${server.origin}/probe-${kind}`;
-  // Evaluated as strings on purpose: the lint rules ban fetch/sendBeacon in source; this probes what the CSP enforces.
-  const fetched = await page.evaluate(`fetch(${JSON.stringify(probe('fetch'))}, { mode: 'no-cors' }).then(() => 'sent', () => 'blocked')`);
-  await page.evaluate(`navigator.sendBeacon(${JSON.stringify(probe('beacon'))}, 'x')`);
-  await page.evaluate(`new Promise((r) => { const i = new Image(); i.onload = i.onerror = () => r(0); i.src = ${JSON.stringify(probe('img'))}; })`);
+  const urls = { fetch: `${server.origin}/probe-fetch`, beacon: `${server.origin}/probe-beacon`, img: `${server.origin}/probe-img` };
+  // Typed evaluate(fn, arg): probe URLs are passed as data, never spliced into code. The functions really attempt egress from the
+  // extension page. The network APIs are looked up by name (Reflect.get) because the lint bans direct references in source;
+  // this test exists precisely to prove that the CSP stops what lint forbids us to write.
+  const fetched = await page.evaluate(async (url) => {
+    const fetchApi = Reflect.get(globalThis, 'fetch') as typeof globalThis.fetch;
+    return fetchApi(url, { mode: 'no-cors' }).then(
+      () => 'sent',
+      () => 'blocked',
+    );
+  }, urls.fetch);
+  await page.evaluate((url) => {
+    const sendBeacon = Reflect.get(navigator, 'sendBeacon') as Navigator['sendBeacon'];
+    sendBeacon.call(navigator, url, 'x');
+  }, urls.beacon);
+  await page.evaluate(
+    (url) =>
+      new Promise<void>((resolve) => {
+        const img = new Image();
+        img.onload = img.onerror = () => resolve();
+        img.src = url;
+      }),
+    urls.img,
+  );
   await page.waitForTimeout(500);
   expect(fetched).toBe('blocked');
   expect(server.requests.filter((u) => u.startsWith('/probe-'))).toEqual([]);
