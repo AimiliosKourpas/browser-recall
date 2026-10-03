@@ -1,25 +1,56 @@
 {
-  "name": "browser-recall-spikes",
+  "name": "browser-recall",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.0",
   "type": "module",
-  "description": "M0 validation spikes for Browser Recall. Throwaway code; production code starts in M1.",
+  "description": "Privacy-first local search for your browsing memory. Chrome MV3, no backend, no telemetry.",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
-    "typecheck": "tsc --noEmit",
+    "prepare": "wxt prepare",
+    "dev": "wxt",
+    "build": "wxt build",
+    "zip": "wxt zip",
+    "typecheck": "wxt prepare && tsc --noEmit",
+    "lint": "eslint . --max-warnings 0",
     "test": "vitest run",
-    "bench:node": "tsx spikes/engine/node-bench.ts",
-    "bench:greek": "tsx spikes/engine/greek.ts",
-    "spike:browser": "node spikes/browser/run.mjs"
+    "test:built": "vitest run --config vitest.built.config.ts",
+    "size": "size-limit",
+    "e2e": "playwright test",
+    "check": "npm run typecheck && npm run lint && npm run test && npm run build && npm run test:built && npm run size"
+  },
+  "dependencies": {
+    "preact": "^10.27.0",
+    "zod": "^4.0.0"
   },
   "devDependencies": {
-    "@sqlite.org/sqlite-wasm": "^3.53.4-build2",
-    "@types/chrome": "^0.3.4",
-    "@types/node": "^26.6.4",
-    "esbuild": "^0.28.2",
-    "minisearch": "^7.2.0",
-    "playwright-core": "^1.63.0",
-    "tsx": "^4.23.15",
-    "typescript": "^7.0.2",
-    "vitest": "^5.0.3"
-  }
+    "@eslint/js": "^9.39.5",
+    "@playwright/test": "1.56.1",
+    "@size-limit/file": "^11.2.0",
+    "@types/chrome": "^0.1.0",
+    "@types/node": "^22.0.0",
+    "axe-core": "^4.10.0",
+    "eslint": "^9.0.0",
+    "size-limit": "^11.2.0",
+    "typescript": "~5.9.0",
+    "typescript-eslint": "^8.40.0",
+    "vitest": "^3.2.0",
+    "wxt": "^0.20.0"
+  },
+  "size-limit": [
+    {
+      "name": "all extension JS (gzip)",
+      "path": ".output/chrome-mv3/**/*.js",
+      "gzip": true,
+      "limit": "70 kB"
+    },
+    {
+      "name": "all extension files (gzip)",
+      "path": ".output/chrome-mv3/**/*",
+      "gzip": true,
+      "limit": "90 kB"
+    }
+  ]
 }

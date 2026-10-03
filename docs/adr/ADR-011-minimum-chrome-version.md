@@ -1,3 +1,5 @@
-# ADR-011 Minimum Chrome version — Proposed: 116 (UNVERIFIED below 141)
+# ADR-011 Minimum Chrome version — Accepted for the M1 feature set: 116 (re-verify in M2 with SQLite/OPFS)
 Everything in M0 ran on Chromium 141 only; Chrome docs were unreachable from the sandbox. Blueprint claims: `runtime.getContexts` 116, offscreen 109. Nothing depends on `browser.*` (148) or `offscreen.hasDocument` (150). Spike manifest sets 116.
 To accept: run the e2e smoke on a pinned older Chromium in CI (M1) and confirm `use_dynamic_url`, opfs-sahpool sync handles, contentless_delete (SQLite is bundled, so independent of Chrome).
+
+M1 evidence: the full M1 e2e suite (8 tests: clean load with 0 manifest errors/warnings, onboarding on install, SW → offscreen → worker ping, SW restart, CSP no-egress, axe) passes on **Chrome for Testing 116.0.5845.96** and on Chromium 141. CI job `compat-minimum-chrome` runs it on every PR. Not yet verified on 116: sqlite-wasm + opfs-sahpool, overlay injection, `use_dynamic_url` — re-run the compat job when M2/M7 land; raise the minimum if they fail. 115 was not tried.

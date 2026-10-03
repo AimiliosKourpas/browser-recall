@@ -1,0 +1,13 @@
+name: Bug report
+description: Something does not work. Do not include real browsing data, URLs or page text.
+body:
+  - type: textarea
+    id: what
+    attributes: { label: What happened, description: What did you expect instead? }
+    validations: { required: true }
+  - type: input
+    id: version
+    attributes: { label: Extension version and Chrome version }
+  - type: textarea
+    id: diagnostics
+    attributes: { label: Diagnostics, description: "Paste the output of Settings → About → Copy diagnostics (counts only, no URLs) once available." }

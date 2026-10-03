@@ -1,0 +1,23 @@
+{
+  "name": "browser-recall-spikes",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "M0 validation spikes for Browser Recall. Throwaway code; production code starts in M1.",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "all": "bash run-all.sh"
+  },
+  "devDependencies": {
+    "@sqlite.org/sqlite-wasm": "^3.53.4-build2",
+    "@types/chrome": "^0.3.4",
+    "@types/node": "^26.6.4",
+    "esbuild": "^0.28.2",
+    "minisearch": "^7.2.0",
+    "playwright-core": "^1.63.0",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.3"
+  }
+}

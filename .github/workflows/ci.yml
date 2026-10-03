@@ -1,0 +1,78 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Typecheck, lint, unit tests, build, manifest and size checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npm run test:built
+      - run: npm run size
+      - run: npm run zip
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extension-zip
+          path: .output/*.zip
+
+  e2e:
+    name: End-to-end (Playwright Chromium, xvfb)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install chromium --with-deps
+      - run: npm run build
+      - run: xvfb-run -a npm run e2e
+
+  compat-minimum-chrome:
+    name: End-to-end on the minimum supported Chrome (116, ADR-011)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run build
+      - name: Install Chrome for Testing 116
+        run: |
+          curl -fsSL -o chrome116.zip https://storage.googleapis.com/chrome-for-testing-public/116.0.5845.96/linux64/chrome-linux64.zip
+          unzip -q chrome116.zip
+          echo "CHROMIUM_PATH=$PWD/chrome-linux64/chrome" >> "$GITHUB_ENV"
+      - run: sudo apt-get update && sudo apt-get install -y xvfb libnss3 libatk-bridge2.0-0 libgbm1 libasound2t64 libxkbcommon0 libxdamage1 libxrandr2 libgtk-3-0
+      - run: xvfb-run -a npm run e2e
+
+  audit:
+    name: Dependency audit (production dependencies)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm audit --omit=dev --audit-level=high

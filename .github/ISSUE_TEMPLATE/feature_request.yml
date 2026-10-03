@@ -1,0 +1,7 @@
+name: Feature request
+description: Suggest an improvement. Features must fit the single purpose: search your own browsing history and saved pages, locally.
+body:
+  - type: textarea
+    id: idea
+    attributes: { label: What would you like and why }
+    validations: { required: true }
