@@ -8,3 +8,5 @@ Decisions and deviations found while building:
 - `srcDir: 'src'`; thin entrypoints under `src/entrypoints/` import from `src/background`, `src/engine`, `src/shared`, `src/ui`.
 - zod costs ~30 kB gzip per bundle that uses it (service-worker chunk and the worker). Accepted; size budget in `package.json` (`size-limit`) is re-baselined in M2 when sqlite WASM (~0.9 MB) lands.
 - Toolchain (dev) dependencies carry `npm audit` advisories (web-ext transitive); production dependencies are clean and CI audits them (`--omit=dev`).
+
+M2 size note: adding SQLite WASM moved the budget (size-limit) from 70 kB JS / 90 kB all-files gzip (M1, pre-engine) to **160 kB / 620 kB**. Actual: JS 139.5 kB gz (sqlite-wasm glue ≈ 70 kB, zod ×2 ≈ 60 kB, engine/UI), all files 545.4 kB gz; zip 545.6 kB; `sqlite3.wasm` 868.9 kB raw is copied from `@sqlite.org/sqlite-wasm` by a `build:publicAssets` hook (never fetched at runtime). Headroom ≈ 13–15 %. The check stays enabled.

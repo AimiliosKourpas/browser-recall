@@ -1,7 +1,8 @@
 // Typed request/response client for the engine worker, used by the offscreen document.
 // Guarantees: every call settles (result, timeout, or EngineInterruptedError if the worker dies), so a caller never hangs on a dead engine.
-import { WORKER_READY, type EngineInfo, type EngineRequest, type EngineResponse } from './contract';
+import { WORKER_READY, type EngineCall, type EngineRequest, type EngineResponse, type EngineResults } from './contract';
 import { EngineInterruptedError, EngineTimeoutError } from '../shared/errors';
+import { EngineError } from './errors';
 
 export interface WorkerLike {
   postMessage(message: unknown): void;
@@ -10,7 +11,7 @@ export interface WorkerLike {
   terminate(): void;
 }
 
-type Pending = { resolve: (value: EngineInfo) => void; reject: (reason: unknown) => void; timer: ReturnType<typeof setTimeout> };
+type Pending = { resolve: (value: unknown) => void; reject: (reason: unknown) => void; timer: ReturnType<typeof setTimeout> };
 
 export class WorkerClient {
   private nextId = 1;
@@ -18,7 +19,8 @@ export class WorkerClient {
   private dead = false;
   private readonly ready: Promise<void>;
 
-  constructor(private readonly worker: WorkerLike, private readonly timeoutMs = 10_000) {
+  /** `timeoutMs` bounds a single call; the first call also waits for the OPFS open (bounded retry inside the worker, ~10 s). */
+  constructor(private readonly worker: WorkerLike, private readonly timeoutMs = 60_000) {
     let markReady!: () => void;
     let markFailed!: (reason: unknown) => void;
     this.ready = new Promise<void>((resolve, reject) => {
@@ -34,8 +36,11 @@ export class WorkerClient {
       if (!entry) return;
       this.pending.delete(data.id);
       clearTimeout(entry.timer);
-      if (data.ok) entry.resolve((data as { result: EngineInfo }).result);
-      else entry.reject(new Error((data as { error: { message: string } }).error.message));
+      if (data.ok) entry.resolve((data as { result: unknown }).result);
+      else {
+        const { code, message } = (data as { error: { code: ConstructorParameters<typeof EngineError>[0]; message: string } }).error;
+        entry.reject(new EngineError(code, message));
+      }
     });
     const onDeath = () => {
       this.dead = true;
@@ -51,17 +56,17 @@ export class WorkerClient {
     worker.addEventListener('messageerror', onDeath);
   }
 
-  async call(method: EngineRequest['method']): Promise<EngineInfo> {
+  async call<C extends EngineCall>(call: C): Promise<EngineResults[C['method']]> {
     if (this.dead) throw new EngineInterruptedError('engine worker terminated');
     await this.ready;
     const id = this.nextId++;
-    return new Promise<EngineInfo>((resolve, reject) => {
+    return new Promise<EngineResults[C['method']]>((resolve, reject) => {
       const timer = setTimeout(() => {
         this.pending.delete(id);
-        reject(new EngineTimeoutError(`engine call ${method} timed out after ${this.timeoutMs} ms`));
+        reject(new EngineTimeoutError(`engine call ${call.method} timed out after ${this.timeoutMs} ms`));
       }, this.timeoutMs);
-      this.pending.set(id, { resolve, reject, timer });
-      this.worker.postMessage({ id, method } satisfies EngineRequest);
+      this.pending.set(id, { resolve: resolve as (v: unknown) => void, reject, timer });
+      this.worker.postMessage({ id, call } satisfies EngineRequest);
     });
   }
 

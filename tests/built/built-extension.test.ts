@@ -7,8 +7,8 @@ const DIR = '.output/chrome-mv3';
 const files = (dir: string): string[] => readdirSync(dir).flatMap((n) => (statSync(join(dir, n)).isDirectory() ? files(join(dir, n)) : [join(dir, n)]));
 
 // URLs that are namespace identifiers or inert comments inside bundled libraries, not network targets.
-// zod embeds JSON-Schema meta-schema identifiers and an IPv6 URL-validation template; they are never fetched.
-const ALLOWED_URL = [/^https?:\/\/www\.w3\.org\//, /^https?:\/\/json-schema\.org\//, /^http:\/\/\[\$\{/, /^https?:\/\/(?:github\.com|zod\.dev|preactjs\.com)\//];
+// zod embeds JSON-Schema meta-schema identifiers and an IPv6 URL-validation template; sqlite-wasm has a documentation link in an error message. None is ever fetched.
+const ALLOWED_URL = [/^https:\/\/sqlite\.org\/wasm\/doc\//, /^https?:\/\/www\.w3\.org\//, /^https?:\/\/json-schema\.org\//, /^http:\/\/\[\$\{/, /^https?:\/\/(?:github\.com|zod\.dev|preactjs\.com)\//];
 
 describe.skipIf(!existsSync(DIR))('built extension', () => {
   const manifest = JSON.parse(readFileSync(join(DIR, 'manifest.json'), 'utf8')) as Record<string, unknown>;
