@@ -108,7 +108,9 @@ describe('maintenance and vacuum (A7)', () => {
 
 describe('OPFS open: bounded retry/backoff (A3)', () => {
   const locked = () => new Error("NoModificationAllowedError: Failed to execute 'createSyncAccessHandle' on 'FileSystemFileHandle': Access Handles cannot be created if there is another open Access Handle");
-  class FakeDb {}
+  class FakeDb {
+    exec(): void {} // receives the connection tuning pragma
+  }
   const pool = { OpfsSAHPoolDb: FakeDb as never };
   const fast = { baseDelayMs: 0, maxDelayMs: 0, sleep: async () => undefined };
 

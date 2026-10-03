@@ -126,6 +126,8 @@ export interface Suggestion {
 }
 
 export interface SearchResponse {
+  /** time spent inside the engine for this search (ms); the UI may show it, tests use it to separate engine from messaging cost */
+  tookMs: number;
   results: SearchResult[];
   suggestions: Suggestion[];
   /** the interpreted filters, for filter chips */

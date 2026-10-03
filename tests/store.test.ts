@@ -50,6 +50,8 @@ describe('content and saved items', () => {
   it('re-applies caps defensively', () => {
     store.upsertContent(content('https://a.example/big', 'word '.repeat(30_000)));
     expect(store.stats().textBytes).toBeLessThanOrEqual(50_000 + 5_000 + 1_000);
+    store.upsertContent(content('https://a.example/greek', 'Ελλάδα', { description: 'ά' }));
+    expect(store.stats().textBytes).toBeGreaterThanOrEqual(50_000 + 'Ελλάδα'.length * 2 + 2 - 5_000); // UTF-8 bytes, not UTF-16 units
   });
   it('savePage stores a saved item that is found with is:saved and ranks as saved', () => {
     store.upsertHistory([hist('https://a.example/s', 'Saved Article')]);

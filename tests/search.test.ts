@@ -156,7 +156,8 @@ describe('ranking order and determinism', () => {
   it('identical scores resolve deterministically (recency, then URL), and repeated searches are identical', () => {
     store.upsertHistory([hist('https://z.example/b', 'Same title', 3), hist('https://z.example/a', 'Same title', 3), hist('https://z.example/c', 'Same title', 3)]);
     expect(urls('same title')).toEqual(['https://z.example/a', 'https://z.example/b', 'https://z.example/c']);
-    expect(search('same title')).toEqual(search('same title'));
+    const strip = (r: ReturnType<typeof search>) => ({ ...r, tookMs: 0 });
+    expect(strip(search('same title'))).toEqual(strip(search('same title')));
   });
   it('respects limit and caps it at 200', () => {
     store.upsertHistory(Array.from({ length: 300 }, (_, i) => hist(`https://l.example/${i}`, `common title ${i}`, i % 50)));

@@ -1,6 +1,6 @@
 // Result snippets built in TypeScript from the stored ORIGINAL text (A1: FTS5 snippet() is ~10× too slow at 20K pages).
 // Deterministic: same input → same window. Highlights are offsets into the returned text, so the UI renders text nodes only.
-import { TOKEN_RE, foldWithMap } from '../fold';
+import { TOKEN_RE, foldWithMap, type FoldedText } from '../fold';
 
 export interface Snippet {
   text: string;
@@ -23,8 +23,8 @@ interface Match {
  * Tokens of `original` that equal a query term (or start with it, for the term flagged as prefix). Offsets refer to the
  * original text via the fold map, so Greek/Latin accents and capitalisation are preserved in the output.
  */
-function findMatches(original: string, terms: string[], prefixTermIndex: number, limit: number): Match[] {
-  const { text, map } = foldWithMap(original);
+function findMatches(original: string, terms: string[], prefixTermIndex: number, limit: number, folded?: FoldedText): Match[] {
+  const { text, map } = folded ?? foldWithMap(original);
   const matches: Match[] = [];
   TOKEN_RE.lastIndex = 0;
   for (let m = TOKEN_RE.exec(text); m !== null && matches.length < limit; m = TOKEN_RE.exec(text)) {
@@ -43,13 +43,14 @@ function findMatches(original: string, terms: string[], prefixTermIndex: number,
 /**
  * @param terms folded query tokens (positives flattened, in order)
  * @param prefixTermIndex index in `terms` that matches as a prefix, or -1
+ * `folded` lets a caller that already folded `original` (e.g. for a phrase check) avoid doing it twice.
  * Returns undefined when the text is empty or nothing matches (callers fall back to a title/URL match line).
  */
-export function buildSnippet(original: string, terms: string[], prefixTermIndex: number, opts: SnippetOptions = {}): Snippet | undefined {
+export function buildSnippet(original: string, terms: string[], prefixTermIndex: number, opts: SnippetOptions = {}, folded?: FoldedText): Snippet | undefined {
   if (!original || terms.length === 0) return undefined;
   const maxLength = opts.maxLength ?? 180;
   const lead = opts.lead ?? 50;
-  const matches = findMatches(original, terms, prefixTermIndex, 200);
+  const matches = findMatches(original, terms, prefixTermIndex, 60, folded);
   if (matches.length === 0) return undefined;
 
   // choose the window start (a match position minus lead) that covers the most DISTINCT terms; ties → earliest
@@ -79,7 +80,7 @@ export function buildSnippet(original: string, terms: string[], prefixTermIndex:
 
   const slice = original.slice(from, to).replace(/\s+/g, ' ');
   // collapsing whitespace changes offsets: recompute highlights on the slice itself
-  const inner = findMatches(slice, terms, prefixTermIndex, 200);
+  const inner = findMatches(slice, terms, prefixTermIndex, 60);
   const prefix = from > 0 ? '…' : '';
   const suffix = to < original.length ? '…' : '';
   return {

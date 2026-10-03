@@ -1,7 +1,7 @@
 // SearchStore: the ONLY place SQL lives (blueprint ARCHITECTURE §5.4b). Single owner of the database: the engine worker.
 // All user text is bound as parameters or reduced to folded alphanumeric tokens before it reaches an FTS5 MATCH string.
-import type { Db } from './db';
-import { fold, tokenize } from './fold';
+import type { Db, Statement } from './db';
+import { fold, foldWithMap, tokenize } from './fold';
 import {
   LIMITS,
   type AddSnippetInput,
@@ -25,12 +25,15 @@ import { LATEST_SCHEMA_VERSION, PAGE_FLAGS, migrate, readSchemaVersion, type Mig
 import { editDistance } from './search/edit-distance';
 import { buildAnyMatch, buildExcludeMatch, buildMatch, buildTrigramMatch } from './search/match';
 import { parseQuery, type ParsedQuery } from './search/parser';
-import { WEIGHTS, combine, normalizeBm25, phraseHit, recency, titleUrlHit, visitBoost } from './search/ranking';
+import { WEIGHTS, combine, normalizeBm25, recency, titleUrlHit, visitBoost } from './search/ranking';
 import { buildSnippet, highlightRanges } from './search/snippet';
 import { normalizeUrl } from './url';
 
 const CANDIDATES = 200;
 const PHRASE_RERANK = 50;
+/** relaxed (approximate) results are a fallback: fewer candidates, and snippet work only for the best few */
+const RELAXED_CANDIDATES = 40;
+const RELAXED_SNIPPETS = 10;
 const RELAX_BELOW = 5;
 const BM25 = 'bm25(fts_main, 10.0, 4.0, 3.0, 1.0)';
 const DAY = 86_400_000;
@@ -38,6 +41,11 @@ const CHUNK = 400;
 
 const chunks = <T>(xs: T[], n = CHUNK): T[][] => Array.from({ length: Math.ceil(xs.length / n) }, (_, i) => xs.slice(i * n, i * n + n));
 const marks = (n: number) => Array.from({ length: n }, () => '?').join(',');
+const encoder = new TextEncoder();
+/** UTF-8 size: what the text actually costs on disk (Greek is 2 bytes per letter), unlike String.length. */
+const utf8Bytes = (s: string): number => encoder.encode(s).length;
+/** true if the tokens occur consecutively (any non-alphanumeric separators) in already-folded text: one native regex scan */
+const adjacent = (tokens: string[], foldedText: string): boolean => new RegExp(tokens.join('[^\\p{L}\\p{N}]+'), 'u').test(foldedText);
 const escapeLike = (s: string) => s.replace(/[\\%_]/g, (c) => `\\${c}`);
 const clip = (s: string | undefined, n: number) => (s ?? '').slice(0, n);
 
@@ -55,7 +63,47 @@ interface PageRow {
 const sourceOf = (flags: number, kind: 'page' | 'snippet'): Source => (kind === 'snippet' ? 'snippet' : flags & PAGE_FLAGS.saved ? 'saved' : flags & PAGE_FLAGS.content ? 'deep' : 'history');
 
 export class SearchStore {
+  /** Prepared statements for the hot write path (compiling FTS5 statements per row was ~3× slower). Bounded; finalised on close. */
+  private readonly prepared = new Map<string, Statement>();
+
   private constructor(private readonly db: Db) {}
+
+  private statement(sql: string): Statement {
+    let st = this.prepared.get(sql);
+    if (!st) {
+      if (this.prepared.size >= 100) this.finalizeStatements(); // IN (...) lists of varying arity would otherwise grow it without bound
+      st = this.db.prepare(sql);
+      this.prepared.set(sql, st);
+    }
+    return st;
+  }
+
+  private finalizeStatements(): void {
+    for (const st of this.prepared.values()) st.finalize();
+    this.prepared.clear();
+  }
+
+  private run(o: { sql: string; bind?: unknown[] }): void {
+    const st = this.statement(o.sql);
+    try {
+      st.bind(o.bind ?? []);
+      st.step();
+    } finally {
+      st.reset();
+    }
+  }
+
+  /** First row of a (cached) query, or undefined. */
+  private first(sql: string, bind: unknown[]): unknown[] | undefined {
+    const st = this.statement(sql);
+    try {
+      st.bind(bind);
+      if (!st.step()) return undefined;
+      return Array.from({ length: st.columnCount }, (_, i) => st.get(i));
+    } finally {
+      st.reset();
+    }
+  }
 
   /** Creates/upgrades the schema, then returns a store. Throws DatabaseTooNewError for a newer database. */
   static open(db: Db, migrations?: Migration[]): SearchStore {
@@ -77,18 +125,18 @@ export class SearchStore {
         }
         const last = Math.round(row.lastVisitTime);
         const title = clip(row.title, LIMITS.title);
-        const existing = this.db.selectArrays('SELECT id, title, last_visit FROM pages WHERE url = ?', [norm.url])[0];
+        const existing = this.first('SELECT id, title, last_visit FROM pages WHERE url = ?', [norm.url]);
         if (!existing) {
-          this.db.exec({
+          this.run({
             sql: 'INSERT INTO pages(url, domain, title, first_seen, last_visit, visit_count, typed_count, flags) VALUES(?,?,?,?,?,?,?,?)',
             bind: [norm.url, norm.domain, title, last, last, row.visitCount ?? 1, row.typedCount ?? 0, PAGE_FLAGS.history],
           });
-          this.reindex(Number(this.db.selectValue('SELECT id FROM pages WHERE url = ?', [norm.url])));
+          this.reindex(Number(this.db.selectValue('SELECT last_insert_rowid()')));
           summary.inserted++;
         } else {
           const id = Number(existing[0]);
           const titleChanged = title !== '' && title !== existing[1];
-          this.db.exec({
+          this.run({
             sql: 'UPDATE pages SET title = ?, last_visit = max(last_visit, ?), visit_count = ?, typed_count = ?, flags = flags | ? WHERE id = ?',
             bind: [titleChanged ? title : String(existing[1]), last, row.visitCount ?? 1, row.typedCount ?? 0, PAGE_FLAGS.history, id],
           });
@@ -110,11 +158,11 @@ export class SearchStore {
     let changed = false;
     this.db.transaction(() => {
       const id = this.ensurePage(norm.url, norm.domain, input.title, input.indexedAt);
-      const prior = this.db.selectArrays('SELECT content_hash, flags FROM pages WHERE id = ?', [id])[0] as [string | null, number];
+      const prior = this.first('SELECT content_hash, flags FROM pages WHERE id = ?', [id]) as [string | null, number];
       if (input.contentHash && prior[0] === input.contentHash && prior[1] & PAGE_FLAGS.content) return;
       changed = true;
       this.writeContents(id, input);
-      this.db.exec({
+      this.run({
         sql: 'UPDATE pages SET flags = flags | ?, lang = ?, content_hash = ?, content_indexed_at = ?, title = CASE WHEN ? != \'\' THEN ? ELSE title END WHERE id = ?',
         bind: [PAGE_FLAGS.content, input.lang ?? null, input.contentHash ?? null, Math.round(input.indexedAt), clip(input.title, LIMITS.title), clip(input.title, LIMITS.title), id],
       });
@@ -130,7 +178,7 @@ export class SearchStore {
     this.db.transaction(() => {
       const id = this.ensurePage(norm.url, norm.domain, input.title, input.savedAt);
       this.writeContents(id, input);
-      this.db.exec({
+      this.run({
         sql: 'UPDATE pages SET flags = flags | ?, saved_at = ?, lang = coalesce(?, lang), content_hash = ?, content_indexed_at = ?, title = CASE WHEN ? != \'\' THEN ? ELSE title END WHERE id = ?',
         bind: [PAGE_FLAGS.saved | PAGE_FLAGS.content, Math.round(input.savedAt), input.lang ?? null, input.contentHash ?? null, Math.round(input.savedAt), clip(input.title, LIMITS.title), clip(input.title, LIMITS.title), id],
       });
@@ -148,30 +196,30 @@ export class SearchStore {
     const title = clip(input.pageTitle, LIMITS.title);
     let id = 0;
     this.db.transaction(() => {
-      this.db.exec({
+      this.run({
         sql: 'INSERT INTO snippets(url, domain, page_title, text, fragment, truncated, created_at) VALUES(?,?,?,?,?,?,?)',
         bind: [norm.url, norm.domain, title, text, input.fragment ?? null, truncated ? 1 : 0, Math.round(input.createdAt)],
       });
       id = Number(this.db.selectValue('SELECT last_insert_rowid()'));
-      this.db.exec({ sql: 'INSERT INTO fts_snip(rowid, text, page_title) VALUES(?,?,?)', bind: [id, fold(text), fold(title)] });
+      this.run({ sql: 'INSERT INTO fts_snip(rowid, text, page_title) VALUES(?,?,?)', bind: [id, fold(text), fold(title)] });
     });
     return { id, truncated };
   }
 
   private ensurePage(url: string, domain: string, title: string | undefined, at: number): number {
-    const found = this.db.selectValue('SELECT id FROM pages WHERE url = ?', [url]);
-    if (found !== undefined && found !== null) return Number(found);
+    const found = this.first('SELECT id FROM pages WHERE url = ?', [url]);
+    if (found) return Number(found[0]);
     const t = Math.round(at);
-    this.db.exec({ sql: 'INSERT INTO pages(url, domain, title, first_seen, last_visit, visit_count, flags) VALUES(?,?,?,?,?,0,0)', bind: [url, domain, clip(title, LIMITS.title), t, t] });
-    return Number(this.db.selectValue('SELECT id FROM pages WHERE url = ?', [url]));
+    this.run({ sql: 'INSERT INTO pages(url, domain, title, first_seen, last_visit, visit_count, flags) VALUES(?,?,?,?,?,0,0)', bind: [url, domain, clip(title, LIMITS.title), t, t] });
+    return Number(this.db.selectValue('SELECT last_insert_rowid()'));
   }
 
   private writeContents(id: number, input: Pick<ContentInput, 'headings' | 'description' | 'body'>): void {
     const headings = clip(input.headings, LIMITS.headings);
     const description = clip(input.description, LIMITS.description);
     const body = clip(input.body, LIMITS.body);
-    const bytes = headings.length + description.length + body.length;
-    this.db.exec({
+    const bytes = utf8Bytes(headings) + utf8Bytes(description) + utf8Bytes(body);
+    this.run({
       sql: 'INSERT INTO contents(page_id, headings, description, body, bytes) VALUES(?,?,?,?,?) ON CONFLICT(page_id) DO UPDATE SET headings=excluded.headings, description=excluded.description, body=excluded.body, bytes=excluded.bytes',
       bind: [id, headings, description, body, bytes],
     });
@@ -179,16 +227,16 @@ export class SearchStore {
 
   /** Rebuilds the folded FTS rows of one page from the stored originals. Must run inside the caller's transaction. */
   private reindex(id: number): void {
-    const page = this.db.selectArrays('SELECT title, url FROM pages WHERE id = ?', [id])[0];
+    const page = this.first('SELECT title, url FROM pages WHERE id = ?', [id]);
     if (!page) return;
-    const content = this.db.selectArrays('SELECT headings, description, body FROM contents WHERE page_id = ?', [id])[0] ?? ['', '', ''];
-    this.db.exec({ sql: 'DELETE FROM fts_main WHERE rowid = ?', bind: [id] });
-    this.db.exec({ sql: 'DELETE FROM fts_meta WHERE rowid = ?', bind: [id] });
-    this.db.exec({
+    const content = this.first('SELECT headings, description, body FROM contents WHERE page_id = ?', [id]) ?? ['', '', ''];
+    this.run({ sql: 'DELETE FROM fts_main WHERE rowid = ?', bind: [id] });
+    this.run({ sql: 'DELETE FROM fts_meta WHERE rowid = ?', bind: [id] });
+    this.run({
       sql: 'INSERT INTO fts_main(rowid, title, headings, description, body) VALUES(?,?,?,?,?)',
       bind: [id, fold(String(page[0])), fold(String(content[0])), fold(String(content[1])), fold(String(content[2]))],
     });
-    this.db.exec({ sql: 'INSERT INTO fts_meta(rowid, title, url) VALUES(?,?,?)', bind: [id, fold(String(page[0])), fold(String(page[1]))] });
+    this.run({ sql: 'INSERT INTO fts_meta(rowid, title, url) VALUES(?,?,?)', bind: [id, fold(String(page[0])), fold(String(page[1]))] });
   }
 
   // ------------------------------------------------------------------ deletes
@@ -244,7 +292,7 @@ export class SearchStore {
         const saved = this.db.selectArrays(`SELECT id FROM pages WHERE id IN (${marks(part.length)}) AND (flags & ${PAGE_FLAGS.saved}) != 0`, part).map((r) => Number(r[0]));
         const savedSet = new Set(saved);
         const doomed = part.filter((id) => !savedSet.has(id));
-        if (saved.length) this.db.exec({ sql: `UPDATE pages SET flags = flags & ${~PAGE_FLAGS.history & 7} WHERE id IN (${marks(saved.length)})`, bind: saved });
+        if (saved.length) this.run({ sql: `UPDATE pages SET flags = flags & ${~PAGE_FLAGS.history & 7} WHERE id IN (${marks(saved.length)})`, bind: saved });
         kept += saved.length;
         deleted += this.removePages(doomed);
       }
@@ -262,9 +310,9 @@ export class SearchStore {
 
   private removePages(ids: number[]): number {
     if (ids.length === 0) return 0;
-    for (const table of ['fts_main', 'fts_meta']) this.db.exec({ sql: `DELETE FROM ${table} WHERE rowid IN (${marks(ids.length)})`, bind: ids });
-    this.db.exec({ sql: `DELETE FROM contents WHERE page_id IN (${marks(ids.length)})`, bind: ids });
-    this.db.exec({ sql: `DELETE FROM pages WHERE id IN (${marks(ids.length)})`, bind: ids });
+    for (const table of ['fts_main', 'fts_meta']) this.run({ sql: `DELETE FROM ${table} WHERE rowid IN (${marks(ids.length)})`, bind: ids });
+    this.run({ sql: `DELETE FROM contents WHERE page_id IN (${marks(ids.length)})`, bind: ids });
+    this.run({ sql: `DELETE FROM pages WHERE id IN (${marks(ids.length)})`, bind: ids });
     return ids.length;
   }
 
@@ -272,8 +320,8 @@ export class SearchStore {
     this.db.transaction(() => {
       const ids = this.db.selectArrays(`SELECT id FROM snippets WHERE ${clause}`, bind).map((r) => Number(r[0]));
       for (const part of chunks(ids)) {
-        this.db.exec({ sql: `DELETE FROM fts_snip WHERE rowid IN (${marks(part.length)})`, bind: part });
-        this.db.exec({ sql: `DELETE FROM snippets WHERE id IN (${marks(part.length)})`, bind: part });
+        this.run({ sql: `DELETE FROM fts_snip WHERE rowid IN (${marks(part.length)})`, bind: part });
+        this.run({ sql: `DELETE FROM snippets WHERE id IN (${marks(part.length)})`, bind: part });
       }
     });
   }
@@ -281,6 +329,12 @@ export class SearchStore {
   // ------------------------------------------------------------------ search
 
   search(params: SearchParams): SearchResponse {
+    const started = performance.now();
+    const response = this.searchInner(params);
+    return { ...response, tookMs: Math.round((performance.now() - started) * 10) / 10 };
+  }
+
+  private searchInner(params: SearchParams): Omit<SearchResponse, 'tookMs'> {
     const now = params.now ?? Date.now();
     const q = parseQuery(params.query, { now, tzOffsetMinutes: params.tzOffsetMinutes ?? 0 });
     const limit = Math.min(200, Math.max(1, params.limit ?? 50));
@@ -355,6 +409,7 @@ export class SearchStore {
   }
 
   private searchPages(ctx: SearchContext, match: string | undefined, approximate: boolean): SearchResult[] {
+    const candidates = approximate ? RELAXED_CANDIDATES : CANDIDATES;
     const { q, terms, prefixIndex, now } = ctx;
     if (q.positives.length > 0 && !match) return [];
     const { where, bind } = this.pageFilters(q);
@@ -362,11 +417,11 @@ export class SearchStore {
     let rows: PageRow[];
     if (match) {
       rows = this.rows(
-        `SELECT ${cols}, ${BM25} AS s FROM fts_main JOIN pages p ON p.id = fts_main.rowid WHERE fts_main MATCH ?${where.length ? ` AND ${where.join(' AND ')}` : ''} ORDER BY s, p.last_visit DESC, p.id LIMIT ${CANDIDATES}`,
+        `SELECT ${cols}, ${BM25} AS s FROM fts_main JOIN pages p ON p.id = fts_main.rowid WHERE fts_main MATCH ?${where.length ? ` AND ${where.join(' AND ')}` : ''} ORDER BY s, p.last_visit DESC, p.id LIMIT ${candidates}`,
         [match, ...bind],
       );
     } else {
-      rows = this.rows(`SELECT ${cols}, 0 AS s FROM pages p${where.length ? ` WHERE ${where.join(' AND ')}` : ''} ORDER BY p.last_visit DESC, p.id LIMIT ${CANDIDATES}`, bind);
+      rows = this.rows(`SELECT ${cols}, 0 AS s FROM pages p${where.length ? ` WHERE ${where.join(' AND ')}` : ''} ORDER BY p.last_visit DESC, p.id LIMIT ${candidates}`, bind);
     }
     return this.rank(rows, ctx, approximate, !!match, terms, prefixIndex, now);
   }
@@ -377,7 +432,7 @@ export class SearchStore {
       const foldedTitle = fold(r.title);
       const score = combine({
         bm25Norm: norm[i] as number,
-        titleUrl: titleUrlHit(terms, tokenize(foldedTitle), tokenize(fold(r.url))),
+        titleUrl: titleUrlHit(terms, tokenize(foldedTitle), tokenize(r.url.toLowerCase())),
         recency: recency(r.lastVisit, now),
         visits: visitBoost(r.visitCount),
         saved: (r.flags & PAGE_FLAGS.saved) !== 0,
@@ -390,13 +445,17 @@ export class SearchStore {
       let snippet: SearchResult['snippet'];
       let phrase = 0;
       let matchKind: SearchResult['matchKind'] = hasMatch ? 'title-url' : 'filter';
-      if (hasMatch && index < PHRASE_RERANK) {
-        const c = this.db.selectArrays('SELECT headings, description, body FROM contents WHERE page_id = ?', [r.id])[0];
+      if (hasMatch && index < (approximate ? RELAXED_SNIPPETS : PHRASE_RERANK)) {
+        const c = this.first('SELECT headings, description, body FROM contents WHERE page_id = ?', [r.id]);
         if (c) {
-          const text = [String(c[2]), String(c[1]), String(c[0])].find((t) => t && buildSnippet(t, terms, prefixIndex)) ?? '';
-          snippet = text ? buildSnippet(text, terms, prefixIndex) : undefined;
+          for (const text of [String(c[2]), String(c[1]), String(c[0])]) {
+            if (!text) continue;
+            const folded = foldWithMap(text); // folded once: used for the snippet window AND the adjacency check below
+            snippet = buildSnippet(text, terms, prefixIndex, {}, folded);
+            if (text === c[2] && terms.length > 1) phrase = adjacent(terms, folded.text.slice(0, 20_000)) || adjacent(terms, foldedTitle) ? 1 : 0;
+            if (snippet) break;
+          }
           if (snippet) matchKind = 'content';
-          if (terms.length > 1) phrase = phraseHit([terms], `${tokenize(foldedTitle).join(' ')} | ${tokenize(fold(String(c[2]).slice(0, 20_000))).join(' ')}`);
         }
       }
       const final = score + WEIGHTS.phrase * phrase;
@@ -425,7 +484,7 @@ export class SearchStore {
     if (!probe) return [];
     const { where, bind } = this.pageFilters(q);
     const rows = this.rows(
-      `SELECT p.id, p.url, p.title, p.domain, p.last_visit, p.visit_count, p.flags, 0 AS s FROM fts_meta JOIN pages p ON p.id = fts_meta.rowid WHERE fts_meta MATCH ?${where.length ? ` AND ${where.join(' AND ')}` : ''} ORDER BY p.last_visit DESC, p.id LIMIT 50`,
+      `SELECT p.id, p.url, p.title, p.domain, p.last_visit, p.visit_count, p.flags, 0 AS s FROM fts_meta JOIN pages p ON p.id = fts_meta.rowid WHERE fts_meta MATCH ?${where.length ? ` AND ${where.join(' AND ')}` : ''} ORDER BY p.last_visit DESC, p.id LIMIT 20`,
       [probe, ...bind],
     );
     return this.rank(rows, ctx, true, true, terms, prefixIndex, now);
@@ -493,21 +552,25 @@ export class SearchStore {
   /** "Did you mean": for each single, unquoted query word absent from the index, the closest indexed words (edit distance <= 2). */
   private suggestFor(q: ParsedQuery): Suggestion[] {
     const out: Suggestion[] = [];
+    const last = q.positives[q.positives.length - 1];
     for (const p of q.positives) {
       if (p.quoted || p.tokens.length !== 1) continue;
       const term = p.tokens[0] as string;
       if ([...term].length < 4) continue;
-      const best = this.suggest(term, 1)[0];
+      // the last word is matched as a PREFIX while typing: a prefix of an indexed word is not a misspelling
+      const best = this.suggest(term, 1, p === last)[0];
       if (best) out.push({ term, replacement: best });
     }
     return out;
   }
 
-  /** Closest indexed words to `term` (excluding the term itself when it exists in the index). */
-  suggest(term: string, limit = 3): string[] {
+  /** Closest indexed words to `term`; none when the term (or, with `asPrefix`, any word starting with it) already exists. */
+  suggest(term: string, limit = 3, asPrefix = false): string[] {
     const t = fold(term);
-    const present = Number(this.db.selectValue('SELECT count(*) FROM fts_vocab WHERE term = ?', [t])) > 0;
-    if (present) return [];
+    const known = asPrefix
+      ? this.first('SELECT 1 FROM fts_vocab WHERE term >= ? AND term < ? LIMIT 1', [t, `${t}\uffff`])
+      : this.first('SELECT 1 FROM fts_vocab WHERE term = ?', [t]);
+    if (known) return [];
     const first = [...t][0];
     if (!first) return [];
     const candidates = this.db
@@ -585,8 +648,8 @@ export class SearchStore {
       const ids = this.db.selectArrays(`SELECT id FROM pages WHERE (flags & ${PAGE_FLAGS.content}) != 0 AND ${notSaved} ORDER BY last_visit ASC, id LIMIT 200`).map((r) => Number(r[0]));
       if (ids.length === 0) break;
       this.db.transaction(() => {
-        this.db.exec({ sql: `DELETE FROM contents WHERE page_id IN (${marks(ids.length)})`, bind: ids });
-        this.db.exec({ sql: `UPDATE pages SET flags = flags & ${~PAGE_FLAGS.content & 7}, content_hash = NULL WHERE id IN (${marks(ids.length)})`, bind: ids });
+        this.run({ sql: `DELETE FROM contents WHERE page_id IN (${marks(ids.length)})`, bind: ids });
+        this.run({ sql: `UPDATE pages SET flags = flags & ${~PAGE_FLAGS.content & 7}, content_hash = NULL WHERE id IN (${marks(ids.length)})`, bind: ids });
         for (const id of ids) this.reindex(id);
       });
       out.trimmedContent += ids.length;
@@ -663,7 +726,7 @@ export class SearchStore {
         }
         const id = this.ensurePage(norm.url, norm.domain, p.title, p.firstSeen);
         this.writeContents(id, { headings: p.headings, description: p.description, body: p.body });
-        this.db.exec({
+        this.run({
           sql: 'UPDATE pages SET title = ?, first_seen = min(first_seen, ?), last_visit = max(last_visit, ?), visit_count = max(visit_count, ?), typed_count = max(typed_count, ?), lang = ?, flags = flags | ?, saved_at = coalesce(saved_at, ?), content_hash = ?, content_indexed_at = ? WHERE id = ?',
           bind: [clip(p.title, LIMITS.title), p.firstSeen, p.lastVisit, p.visitCount, p.typedCount, p.lang, p.flags, p.savedAt, p.contentHash, p.contentIndexedAt, id],
         });
@@ -678,9 +741,9 @@ export class SearchStore {
         }
         const dup = this.db.selectValue('SELECT id FROM snippets WHERE url = ? AND text = ? AND created_at = ?', [norm.url, s.text, s.createdAt]);
         if (dup !== undefined && dup !== null) continue;
-        this.db.exec({ sql: 'INSERT INTO snippets(url, domain, page_title, text, fragment, truncated, created_at) VALUES(?,?,?,?,?,?,?)', bind: [norm.url, norm.domain, s.pageTitle, s.text, s.fragment, s.truncated ? 1 : 0, s.createdAt] });
+        this.run({ sql: 'INSERT INTO snippets(url, domain, page_title, text, fragment, truncated, created_at) VALUES(?,?,?,?,?,?,?)', bind: [norm.url, norm.domain, s.pageTitle, s.text, s.fragment, s.truncated ? 1 : 0, s.createdAt] });
         const id = Number(this.db.selectValue('SELECT last_insert_rowid()'));
-        this.db.exec({ sql: 'INSERT INTO fts_snip(rowid, text, page_title) VALUES(?,?,?)', bind: [id, fold(s.text), fold(s.pageTitle)] });
+        this.run({ sql: 'INSERT INTO fts_snip(rowid, text, page_title) VALUES(?,?,?)', bind: [id, fold(s.text), fold(s.pageTitle)] });
         snippets++;
       }
     });
@@ -692,6 +755,7 @@ export class SearchStore {
   }
 
   close(): void {
+    this.finalizeStatements();
     this.db.close();
   }
 }

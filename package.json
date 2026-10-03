@@ -19,7 +19,9 @@
     "test:built": "vitest run --config vitest.built.config.ts",
     "size": "size-limit",
     "e2e": "playwright test",
-    "check": "npm run typecheck && npm run lint && npm run test && npm run build && npm run test:built && npm run size"
+    "check": "npm run typecheck && npm run lint && npm run test && npm run test:eval && npm run build && npm run test:built && npm run size",
+    "test:eval": "vitest run --config vitest.eval.config.ts",
+    "test:perf": "vitest run --config vitest.perf.config.ts"
   },
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "^3.53.4-build2",
@@ -46,13 +48,13 @@
       "name": "all extension JS (gzip)",
       "path": ".output/chrome-mv3/**/*.js",
       "gzip": true,
-      "limit": "70 kB"
+      "limit": "160 kB"
     },
     {
-      "name": "all extension files (gzip)",
+      "name": "all extension files incl. sqlite3.wasm (gzip)",
       "path": ".output/chrome-mv3/**/*",
       "gzip": true,
-      "limit": "90 kB"
+      "limit": "620 kB"
     }
   ]
 }

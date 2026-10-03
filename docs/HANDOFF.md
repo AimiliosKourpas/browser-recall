@@ -1,32 +1,35 @@
-# Handoff (after M1)
+# Handoff (after M2)
 
-**State:** M0 done (G0 conditional pass, merged). M1 done on branch `claude/m1-foundation`, awaiting owner review/merge. Report: `docs/milestones/M1-RESULTS.md`. **Do not start M2 without owner approval.**
+**State:** M0 done (G0 conditional pass), M1 merged, **M2 done on branch `claude/m2-engine`, awaiting owner review/merge** (GitHub CI for it not yet run). Reports: `docs/milestones/M2-RESULTS.md` (read first), `M1-RESULTS.md`, `docs/spikes/M0-RESULTS.md`. **Do not start M3 without owner approval.**
 
 ## Read first (in order)
-1. `docs/milestones/M1-RESULTS.md` (what exists, how to run it, A1–A7 status)
-2. `docs/spikes/M0-RESULTS.md` (measured evidence; overrides the blueprint) and `docs/adr/`
-3. The M2 section of `BROWSER_RECALL_MASTER_BLUEPRINT.md` (IMPLEMENTATION_PLAN §3 M2)
+1. `docs/milestones/M2-RESULTS.md` (engine, API, measured numbers, risks, what M3 needs)
+2. ADR-002 (M2 record), ADR-012 (model/protocol/semantics), ADR-006 (deletion/expiry), ADR-011 (min Chrome), then the M3 section of `BROWSER_RECALL_MASTER_BLUEPRINT.md`
 
 ## Commands
-`npm ci` · `npm run check` (typecheck+lint+unit+build+built tests+size; ~15 s) · `xvfb-run -a npm run e2e` (~10 s) · `CHROMIUM_PATH=<chrome> …` to test another build · `cd spikes && npm ci` for the M0 spikes.
-Local minimum-Chrome check: download Chrome for Testing 116.0.5845.96 from `storage.googleapis.com/chrome-for-testing-public/…` (reachable from the cloud sandbox; developer.chrome.com is NOT).
+`npm ci` · `npm run check` (typecheck, lint, unit, eval, build, built checks, size; ≈ 40 s) · `xvfb-run -a npm run e2e` (13 tests, ≈ 45 s; `CHROMIUM_PATH=<chrome>` for another build) · `npm run test:perf` (20K pages, ≈ 90 s) · `EVAL_WRITE=1 npm run test:eval` regenerates the eval baseline · `cd spikes && npm ci` for M0 spikes.
+Chrome for Testing 116: `storage.googleapis.com/chrome-for-testing-public/116.0.5845.96/linux64/chrome-linux64.zip` (reachable from the sandbox; developer.chrome.com is not).
 
 ## Architecture in one paragraph
-`src/manifest.ts` is the single manifest source (allowlisted by tests). SW (`src/background`) is a stateless router: `acceptMessage` (zod + sender trust, decided synchronously) → `routeMessage` → `engine-client` (ensure offscreen via `offscreen-manager`, send `engine/ping`, retry transient failures with backoff). Offscreen page (`src/entrypoints/offscreen`) owns a `WorkerClient` for `engine-worker.js` (unlisted script from `src/engine/worker-main.ts`); the worker validates requests with `src/engine/contract.ts` and answers via `src/engine/handlers.ts`. UI is Preact (`src/ui`), strings via `_locales` + `src/shared/i18n.ts`.
+UI → `engineCall()` (`src/shared/engine-api.ts`) → SW (`acceptMessage` zod+sender gate, `routeMessage`, `engine-client` with retry of `engine-unavailable`/channel-closed) → offscreen (`WorkerClient`) → `engine-worker.js` (`src/engine/worker-main.ts`: validates, serialises calls, lazy OPFS open with bounded retry, not caching failures) → `SearchStore` (`src/engine/store.ts`, the only SQL) on SQLite WASM + OPFS sahpool. `src/engine` has no `chrome.*` (lint). 19 typed methods in `src/engine/contract.ts`.
 
-## M2 starting points (do not repeat research)
-- Extend `engineRequestSchema` / `EngineResults` / `handlers.ts` / `WorkerClient.call` (currently typed for `ping` only — generalise the result typing per method) with SearchStore methods. The worker is the single DB owner.
-- **Implement M0 amendments A1/A2/A3/A5(policy)/A6/A7 in the engine**: TypeScript snippets; contentless FTS (`content='', contentless_delete=1`, `prefix='3'`, original text in `contents`, `fold()` = NFD → strip `\p{M}` → lowercase on index AND query); `open()` retry/backoff around `installOpfsSAHPoolVfs` (~2 s worst case; `retryWithBackoff` and `isTransientMessagingError` already exist and are tested; add the OPFS-handle error pattern); `incremental_vacuum` maintenance; non-http(s) URL filter; port `spikes/engine/deletion-policy.ts` (85-day expiry guard) with its tests. Reference code: `spikes/engine/fts-store.ts`, `engine.test.ts`.
-- Load `sqlite3.wasm` from a `public/` asset with explicit `locateFile` (classic worker, `chrome.runtime.getURL`); module-worker `import.meta.url` did not work from an HTML entrypoint under WXT (ADR-009). Re-baseline `size-limit` (sqlite ≈0.9 MB).
-- Re-run the `compat-minimum-chrome` CI job after adding sqlite/OPFS (ADR-011) — if sahpool fails on 116, raise `MINIMUM_CHROME_VERSION`.
-- Keep `src/engine` free of `chrome.*` (lint-enforced). Synthetic corpus + relevance eval harness are M2 deliverables (`spikes/shared/corpus.ts` is a good start).
+## M3 starting points
+- Use `upsertHistory` with batches ≤ 1,000 rows (the worker serialises calls; bigger batches block searches). Non-http(s) are skipped by the engine already (summary has `skipped`).
+- Deletion mirroring: engine has `deleteUrls/deleteAllExceptSaved/deleteRange`. The ADR-006 expiry guard (ignore removals of URLs whose stored last visit is > 85 days old unless `allHistory`) needs the stored last visit: **add a `lastVisits(urls)` engine method** (read-only, returns `{url,lastVisit}[]`) and port `spikes/engine/deletion-policy.ts` + tests into `src/` (SW side, pure).
+- Wire daily `chrome.alarms` → `maintenance`, `applyRetention`, `enforceCap`; schedule `integrityCheck` rarely (≈ 5 s at 20K).
+- Back-fill: `history.search({startTime:0})` windows (M0 S8: 7-day windows, large maxResults, ≈ 40 s for 100K into the engine); skip `chrome-extension://` rows (they appear in history).
+- First thing to measure in the browser with real data: memory and 20K latency (not re-measured in M2).
+- `engineCall` results are typed but unchecked at runtime on the UI side; the SW/worker validate inputs.
 
 ## Gotchas
-- Playwright keeps a DevTools session on the SW: natural idle termination never happens in e2e; use CDP `ServiceWorker.stopWorker` (see e2e test).
-- `history.addUrl` takes only `{url}`; seed old history by writing the History SQLite DB with the browser closed (`spikes/browser/seed-history.py`).
-- `pkill -f <pattern>` inside a Bash call can kill your own shell; use `pkill -x`.
+- `PRAGMA incremental_vacuum(N)` must be stepped (prepared statement), not `exec`'d.
+- Size accounting is UTF-8 bytes (`stats().textBytes`): Greek is 2 bytes/letter.
+- `fold()` maps ς→σ; always fold query tokens with the same function (the parser does).
+- The engine worker is a classic WXT unlisted script; `sqlite3.wasm` is copied by the `build:publicAssets` hook in `wxt.config.ts`.
+- Playwright keeps the SW alive: stop it with CDP `ServiceWorker.stopWorker`; close the offscreen doc with CDP `Target.closeTarget` (both used in `e2e/engine.spec.ts`).
+- `pkill -f <pattern>` inside Bash kills your own shell: use `pkill -x`.
 - Rollup prints noisy zod "annotation" warnings during `wxt build`; harmless.
 - Dev-dependency `npm audit` advisories (web-ext transitive) are known; prod audit is clean and CI-gated.
 
 ## Owner actions still open (agents cannot do these)
-Chrome Web Store developer account + unlisted draft upload (record banner text/privacy checkboxes); demand conversations; Windows/macOS shortcut check; ADR-007 (encryption) question to store support; confirm the licence (MIT placeholder added in M1) and the public product name (still "Browser Recall" — trademark/store collision check); confirm CI is green on GitHub (workflows were validated locally only).
+Chrome Web Store developer account + unlisted draft upload (record banner text/privacy checkboxes); demand conversations; Windows/macOS shortcut check; ADR-007 (encryption) question to store support; confirm the licence (MIT placeholder) and the public product name; confirm GitHub CI is green for M2 (new `engine-perf` job runs on main/manual only).

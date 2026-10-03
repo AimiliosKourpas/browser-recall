@@ -16,8 +16,9 @@ describe('fold (A2)', () => {
   it('NFD → strip marks → lowercase: Greek tonos, dialytika, Latin accents, final sigma, case', () => {
     expect(fold('Βιβλίο')).toBe('βιβλιο');
     expect(fold('ΒΙΒΛΊΟ')).toBe('βιβλιο');
-    expect(fold('λόγος')).toBe('λογος');
-    expect(fold('ΛΟΓΟΣ')).toBe('λογος'); // JS lower-casing picks the final sigma by context, so λόγος and ΛΟΓΟΣ fold equal
+    expect(fold('λόγος')).toBe('λογοσ');
+    expect(fold('ΛΟΓΟΣ')).toBe('λογοσ'); // final sigma folds to sigma: context-free, so per-character folding (snippets) agrees with whole-string folding
+    expect(foldWithMap('ΛΟΓΟΣ').text).toBe('λογοσ');
     expect(fold('ΐ ΰ ϊ ϋ ά έ ή ί ό ύ ώ')).toBe('ι υ ι υ α ε η ι ο υ ω');
     expect(fold('Café Zürich Ñandú Ångström')).toBe('cafe zurich nandu angstrom');
   });
@@ -29,8 +30,8 @@ describe('fold (A2)', () => {
   it('foldWithMap maps folded offsets back to the original (accents, expansion-free)', () => {
     const o = 'Ο Άνθρωπος';
     const { text, map } = foldWithMap(o);
-    expect(text).toBe('ο ανθρωπος');
-    expect(o.slice(map[text.indexOf('ανθρωπος')], map[text.length])).toBe('Άνθρωπος');
+    expect(text).toBe('ο ανθρωποσ');
+    expect(o.slice(map[text.indexOf('ανθρωποσ')], map[text.length])).toBe('Άνθρωπος');
   });
   it('tokenize splits on non-letters/numbers', () => {
     expect(tokenize(fold("Foo-bar_baz, C++ 42!"))).toEqual(['foo', 'bar', 'baz', 'c', '42']);
@@ -245,7 +246,7 @@ describe('snippets (A1: TypeScript, deterministic)', () => {
     expect(buildSnippet('text', [], -1)).toBeUndefined();
   });
   it('Greek: accent- and case-insensitive match, original accents and case preserved in the output and highlights', () => {
-    const s = buildSnippet('Ο Λόγος του Σωκράτη για την ΑΡΕΤΗ', ['λογος', 'αρετη'], -1);
+    const s = buildSnippet('Ο Λόγος του Σωκράτη για την ΑΡΕΤΗ', ['λογοσ', 'αρετη'], -1);
     expect(s?.text).toBe('Ο Λόγος του Σωκράτη για την ΑΡΕΤΗ');
     expect(s?.highlights.map(([a, b]) => s.text.slice(a, b))).toEqual(['Λόγος', 'ΑΡΕΤΗ']);
   });

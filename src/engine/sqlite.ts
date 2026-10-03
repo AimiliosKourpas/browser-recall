@@ -33,6 +33,15 @@ export async function openMemoryDb(): Promise<Db> {
 export const OPFS_OPEN_RETRY: Omit<RetryOptions, 'isRetryable'> = { attempts: 60, baseDelayMs: 100, maxDelayMs: 250 };
 const isHandleLocked = (e: unknown) => /NoModificationAllowed|Access Handle|createSyncAccessHandle/i.test(String(e));
 
+/**
+ * Per-connection tuning (measured in e2e/engine-perf.spec.ts): a 32 MB page cache keeps the hot FTS pages in memory instead of
+ * re-reading OPFS on every query. Durability pragmas are left at their defaults: M0 S3 showed clean recovery from SIGKILL
+ * mid-write with them, and nothing here has been shown to need weaker settings.
+ */
+export function tuneConnection(db: Db): void {
+  db.exec('PRAGMA cache_size = -32768');
+}
+
 export interface OpfsOptions {
   wasmUrl: string;
   directory?: string;
@@ -62,7 +71,9 @@ export async function openOpfsDb(opts: OpfsOptions): Promise<Db> {
       },
       { ...OPFS_OPEN_RETRY, isRetryable: isHandleLocked, ...opts.retry },
     );
-    return new pool.OpfsSAHPoolDb(opts.filename ?? '/browser-recall.db');
+    const db = new pool.OpfsSAHPoolDb(opts.filename ?? '/browser-recall.db');
+    tuneConnection(db);
+    return db;
   } catch (error) {
     throw new EngineOpenError(`could not open the local database after ${attempts} attempt(s): ${error instanceof Error ? error.message : String(error)}`, attempts, { cause: error });
   }
