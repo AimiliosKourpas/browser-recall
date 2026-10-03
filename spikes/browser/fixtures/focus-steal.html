@@ -1,0 +1,3 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Focus-steal fixture</title><style>body{background:#123;color:#eee}</style></head>
+<body><input id="field"><script>window.__keys=[];for (const t of ['keydown','keypress','keyup','input'])window.addEventListener(t,e=>window.__keys.push(t+':'+e.key),true);
+setInterval(() => document.getElementById('field').focus(), 50);</script></body></html>

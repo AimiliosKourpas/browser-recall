@@ -1,0 +1,12 @@
+import { launch, extensionIds, benchPage, fmt, sleep } from './harness.mjs';
+const { ctx } = await launch({ exts: ['base'] });
+const [id] = await extensionIds(ctx);
+console.log('ext id', id);
+const b = await benchPage(ctx, id);
+console.log('commands', fmt(await b.sw({ cmd: 'commands' })));
+console.log('open', fmt(await b.engine('open', { vfs: 'opfs-sahpool' })));
+console.log('load', fmt(await b.engine('load', { pages: 2000 })));
+console.log('query', fmt(await b.engine('bench', { n: 50 })));
+console.log('integrity', fmt(await b.engine('integrity')));
+console.log('mem', fmt(await b.engine('mem')));
+await ctx.close();
