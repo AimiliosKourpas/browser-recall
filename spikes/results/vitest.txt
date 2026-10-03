@@ -1,0 +1,9 @@
+
+ RUN  v5.0.3 /home/user/browser-recall
+
+
+ Test Files  1 passed (1)
+      Tests  25 passed (25)
+   Start at  21:47:29
+   Duration  872ms (tests 64%, transform 30%, import 5%, worker 1%)
+

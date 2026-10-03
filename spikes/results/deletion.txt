@@ -1,0 +1,6 @@
+{"case":"history.deleteUrl(a)","events":[{"allHistory":false,"urls":["https://del-a.example/"]}],"rowsLeft":2}
+{"case":"history.deleteRange(window around b)","events":[{"allHistory":false,"urls":["https://del-b.example/"]}],"rowsLeft":1}
+{"case":"history.deleteRange(only newest of 2 visits of one URL)","events":[{"allHistory":false,"urls":[]}],"rowsLeft":2}
+{"afterPartialDelete":{"urlStillPresent":true,"visitCount":1}}
+{"case":"browsingData.removeHistory({since:0}) (what \"Clear browsing data\" calls)","events":[{"allHistory":true,"urls":[]}],"rowsLeft":0}
+{"case":"history.deleteAll()","events":[{"allHistory":true,"urls":[]}],"rowsLeft":0}

@@ -1,0 +1,9 @@
+seeded 100000 urls
+{"s":"default maxResults (omitted), startTime:0","n":100,"ms":947,"bytes":16872,"first":"chrome-extension://llkbmjjjheeichdbieobfmnbmegibabl/bench.html"}
+{"s":"maxResults=1000, startTime:0","n":1000,"ms":19,"bytes":171294,"first":"chrome-extension://llkbmjjjheeichdbieobfmnbmegibabl/bench.html"}
+{"s":"omitted startTime (default window)","n":1131,"ms":21,"bytes":193948,"first":"chrome-extension://llkbmjjjheeichdbieobfmnbmegibabl/bench.html"}
+{"s":"S1 single call startTime:0 maxResults=1e6","n":100001,"ms":2062,"bytes":17152029,"first":"chrome-extension://llkbmjjjheeichdbieobfmnbmegibabl/bench.html"}
+{"s":"S2 7-day windows, maxResults=1e6","calls":14,"total":100001,"largestWindow":8024,"totalMs":2065}
+{"s":"S3 adaptive windows, maxResults=1000/call (subdivide when full)","calls":260,"total":100001,"totalMs":18461}
+{"s":"import to engine (title-only, FTS5+trigram)","rows":100001,"imported":100000,"readFromHistoryMs":6451,"engineInsertMsSum":25771,"wallMsForBatches":33098,"rowsPerSec":3021,"dbMB":69.8,"dbBytes":69775360}
+{"s":"title-only 100K query latency (10 queries, ms inside worker)","xs":[34,13.1,14.4,16.2,10.7,10.1,9.4,8.9,15.1,15.6]}

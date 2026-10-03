@@ -1,0 +1,4 @@
+node_modules/
+spikes/**/dist/
+spikes/**/.tmp/
+*.log.tmp

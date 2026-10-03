@@ -1,0 +1,11 @@
+phase1: recent rows via API: 10
+seeded old rows: 70
+t=1s oldLeft=70 recentLeft=10 removedEvents=0
+t=41s oldLeft=38 recentLeft=10 removedEvents=1
+t=61s oldLeft=38 recentLeft=10 removedEvents=1
+t=81s oldLeft=38 recentLeft=10 removedEvents=1
+t=101s oldLeft=6 recentLeft=10 removedEvents=2
+t=121s oldLeft=0 recentLeft=10 removedEvents=3
+expiry finished; removed events: 3
+sample event: {"allHistory":false,"urls":["https://old-38.example/page","https://old-39.example/page","https://old-40.example/page","https://old-41.example/page","https://old-42.example/page","https://old-43.example/page","https://old-44.example/page","https://old-45.example/page","https://old-46.example/page","h
+urls reported total: 70 allHistory flags: [ false, false, false ]

@@ -1,0 +1,11 @@
+SQLite 3.53.4
+ENABLE_FTS5 compile option: 1
+{"engine":"fts5","variant":"prefix-2-3","pages":5000,"textMB":26.2,"dbMB":57.2,"dbOverText":2.18,"insertPagesPerSec":2023,"distinctive":{"p50":1.7,"p95":7.2,"max":15.7},"distinctiveFiltered":{"p50":0.5,"p95":3.5,"max":8.9},"frequency":{"p50":5.4,"p95":28.4,"max":38.4}}
+{"engine":"fts5","variant":"no-prefix-index","pages":5000,"textMB":26.2,"dbMB":46.9,"dbOverText":1.79,"insertPagesPerSec":3110,"distinctive":{"p50":1.7,"p95":6.4,"max":15.2},"distinctiveFiltered":{"p50":0.5,"p95":3.9,"max":10.2},"frequency":{"p50":6.7,"p95":81.3,"max":105.5}}
+{"engine":"minisearch","pages":5000,"buildMs":4495,"heapDeltaMB":120,"distinctive":{"p50":0.6,"p95":7.8,"max":18},"frequency":{"p50":9.7,"p95":202.1,"max":485.9}}
+{"engine":"fts5","variant":"prefix-2-3","pages":20000,"textMB":107.2,"dbMB":226.2,"dbOverText":2.11,"insertPagesPerSec":1765,"distinctive":{"p50":3.1,"p95":15.5,"max":29.2},"distinctiveFiltered":{"p50":0.8,"p95":8.9,"max":21.3},"frequency":{"p50":15.7,"p95":106,"max":194.8}}
+{"engine":"fts5","variant":"no-prefix-index","pages":20000,"textMB":107.2,"dbMB":186.7,"dbOverText":1.74,"insertPagesPerSec":2518,"distinctive":{"p50":2.8,"p95":16,"max":26.1},"distinctiveFiltered":{"p50":0.7,"p95":9.2,"max":22.1},"frequency":{"p50":17.7,"p95":233.4,"max":392}}
+{"engine":"minisearch","pages":20000,"buildMs":20813,"heapDeltaMB":382,"distinctive":{"p50":2.3,"p95":36.1,"max":77.3},"frequency":{"p50":46.1,"p95":1018.4,"max":2638.3}}
+{"engine":"fts5","variant":"prefix-2-3","pages":50000,"textMB":271.3,"dbMB":569.8,"dbOverText":2.1,"insertPagesPerSec":1363,"distinctive":{"p50":4.1,"p95":31.8,"max":74.4},"distinctiveFiltered":{"p50":1.2,"p95":25,"max":42.6},"frequency":{"p50":34.7,"p95":253.1,"max":501.2}}
+{"engine":"fts5","variant":"no-prefix-index","pages":50000,"textMB":271.3,"dbMB":467.3,"dbOverText":1.72,"insertPagesPerSec":1933,"distinctive":{"p50":4.4,"p95":33.5,"max":73.8},"distinctiveFiltered":{"p50":1.3,"p95":24,"max":43.9},"frequency":{"p50":48.4,"p95":706,"max":929.3}}
+{"engine":"minisearch","pages":50000,"buildMs":58592,"heapDeltaMB":473,"distinctive":{"p50":9.3,"p95":117.4,"max":296.8},"frequency":{"p50":181.7,"p95":3679.5,"max":7116.6}}

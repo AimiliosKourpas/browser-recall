@@ -1,0 +1,2 @@
+{"variant":"test","extId":"llkbmjjjheeichdbieobfmnbmegibabl","overlayFrameHost":"llkbmjjjheeichdbieobfmnbmegibabl","sameAsStaticId":true,"probe":"fetch ok status=200","probeImg":"static-id iframe loaded"}
+{"variant":"dyn","extId":"pfgbldkdnadfmbjhkjbnibmfkjokfaol","overlayFrameHost":"pfgbldkdnadfmbjhkjbnibmfkjokfaol","sameAsStaticId":true,"probe":"fetch blocked: Failed to fetch","probeImg":"static-id iframe loaded"}
