@@ -24,6 +24,14 @@ describe('acceptMessage (service worker gate)', () => {
   it('accepts valid messages from our pages', () => {
     expect(acceptMessage({ type: 'sw/ensure-engine' }, page, ID)).toEqual({ type: 'sw/ensure-engine' });
     expect(acceptMessage({ type: 'sw/open-search' }, page, ID)).toEqual({ type: 'sw/open-search' });
+    const search = { type: 'sw/engine', call: { method: 'search', params: { query: 'x' } } };
+    expect(acceptMessage(search, page, ID)).toEqual(search);
+  });
+  it('validates engine call params at the gate and trusts only our pages for them', () => {
+    expect(acceptMessage({ type: 'sw/engine', call: { method: 'search', params: { query: 5 } } }, page, ID)).toBeUndefined();
+    expect(acceptMessage({ type: 'sw/engine', call: { method: 'deleteEverything' } }, { id: ID, url: 'https://evil.example/' }, ID)).toBeUndefined();
+    expect(acceptMessage({ type: 'sw/engine', call: { method: 'deleteEverything' } }, { id: 'other', url: 'chrome-extension://other/x.html' }, ID)).toBeUndefined();
+    expect(acceptMessage({ type: 'sw/engine', call: { method: 'raw-sql', params: { sql: 'DROP' } } }, page, ID)).toBeUndefined();
   });
   it('rejects unknown shapes, extra junk types, and untrusted senders', () => {
     expect(acceptMessage({ type: 'sw/delete-everything' }, page, ID)).toBeUndefined();
@@ -36,9 +44,10 @@ describe('acceptMessage (service worker gate)', () => {
 
 describe('schemas', () => {
   it('engine message requires target and type', () => {
-    expect(engineMessageSchema.safeParse({ target: 'engine', type: 'engine/ping' }).success).toBe(true);
-    expect(engineMessageSchema.safeParse({ type: 'engine/ping' }).success).toBe(false);
-    expect(engineMessageSchema.safeParse({ target: 'engine', type: 'engine/drop-db' }).success).toBe(false);
+    expect(engineMessageSchema.safeParse({ target: 'engine', type: 'engine/call', call: { method: 'ping' } }).success).toBe(true);
+    expect(engineMessageSchema.safeParse({ type: 'engine/call', call: { method: 'ping' } }).success).toBe(false);
+    expect(engineMessageSchema.safeParse({ target: 'engine', type: 'engine/call', call: { method: 'drop-db' } }).success).toBe(false);
+    expect(engineMessageSchema.safeParse({ target: 'engine', type: 'engine/ping' }).success).toBe(false);
   });
   it('result envelope validates both arms and rejects mixed shapes', () => {
     expect(ensureEngineResultSchema.safeParse({ ok: true, data: { protocol: 1, instanceId: 'a' } }).success).toBe(true);

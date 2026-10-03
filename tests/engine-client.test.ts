@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { createEngineClient } from '../src/background/engine-client';
 import type { OffscreenManager } from '../src/background/offscreen-manager';
+import { EngineError } from '../src/engine/errors';
 
 const info = { protocol: 1, instanceId: 'abc' };
 const okResponse = { ok: true, data: info };
@@ -35,10 +36,28 @@ describe('engine client', () => {
     });
     expect(await client.ping()).toEqual(info);
   });
+  it('retries when the engine worker died mid-call ("engine-unavailable"), but not for final typed errors', async () => {
+    const died = setup(async (n) => (n < 3 ? { ok: false, error: { code: 'engine-unavailable', message: 'engine worker terminated' } } : okResponse));
+    expect(await died.client.ping()).toEqual(info);
+    expect(died.counts().sends).toBe(3);
+    for (const code of ['open-failed', 'db-too-new', 'bad-request', 'internal'] as const) {
+      const f = setup(async () => ({ ok: false, error: { code, message: `m-${code}` } }));
+      await expect(f.client.ping()).rejects.toMatchObject({ code, message: `m-${code}` });
+      expect(f.counts().sends).toBe(1);
+    }
+  });
+  it('sends validated engine calls and returns typed data', async () => {
+    const seen: unknown[] = [];
+    const offscreen: OffscreenManager = { ensure: async () => undefined, close: async () => undefined };
+    const client = createEngineClient({ offscreen, retry: noSleep, sendMessage: async (m) => (seen.push(m), { ok: true, data: { inserted: 1, updated: 0, skipped: 0 } }) });
+    expect(await client.call({ method: 'upsertHistory', params: { rows: [] } })).toEqual({ inserted: 1, updated: 0, skipped: 0 });
+    expect(seen).toEqual([{ target: 'engine', type: 'engine/call', call: { method: 'upsertHistory', params: { rows: [] } } }]);
+  });
   it('does not retry engine-reported errors or malformed responses', async () => {
     const a = setup(async () => ({ ok: false, error: { code: 'internal', message: 'db locked' } }));
     await expect(a.client.ping()).rejects.toThrow('db locked');
-    expect(a.counts().sends).toBe(1);
+    await expect(a.client.ping()).rejects.toBeInstanceOf(EngineError);
+    expect(a.counts().sends).toBe(2);
     const b = setup(async () => ({ nonsense: true }));
     await expect(b.client.ping()).rejects.toThrow('malformed');
     expect(b.counts().sends).toBe(1);

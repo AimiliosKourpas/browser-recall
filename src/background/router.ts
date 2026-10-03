@@ -1,9 +1,11 @@
 // Message routing for the service worker. Pure (dependencies injected) so it is unit-tested without Chrome.
-import type { EngineInfo } from '../engine/contract';
+import type { EngineCall, EngineInfo } from '../engine/contract';
+import { EngineError } from '../engine/errors';
 import { isTrustedExtensionPage, swMessageSchema, type Result, type SenderLike, type SwMessage } from '../shared/messages';
 
 export interface RouterDeps {
   ensureEngine: () => Promise<EngineInfo>;
+  engineCall: (call: EngineCall) => Promise<unknown>;
   openSearch: () => Promise<void>;
 }
 
@@ -22,11 +24,14 @@ export async function routeMessage(message: SwMessage, deps: RouterDeps): Promis
     switch (message.type) {
       case 'sw/ensure-engine':
         return { ok: true, data: await deps.ensureEngine() };
+      case 'sw/engine':
+        return { ok: true, data: await deps.engineCall(message.call) };
       case 'sw/open-search':
         await deps.openSearch();
         return { ok: true, data: { opened: true } };
     }
   } catch (error) {
-    return { ok: false, error: { code: 'engine-unavailable', message: error instanceof Error ? error.message : String(error) } };
+    const message = error instanceof Error ? error.message : String(error);
+    return { ok: false, error: { code: error instanceof EngineError ? error.code : 'engine-unavailable', message } };
   }
 }

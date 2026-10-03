@@ -23,7 +23,7 @@ export function registerBackground(): void {
   chrome.runtime.onMessage.addListener((raw: unknown, sender, sendResponse) => {
     const message = acceptMessage(raw, sender, chrome.runtime.id);
     if (!message) return false; // not ours / not trusted: never answer, never hold a channel open
-    void routeMessage(message, { ensureEngine: () => engine.ping(), openSearch }).then(sendResponse);
+    void routeMessage(message, { ensureEngine: () => engine.ping(), engineCall: (call) => engine.call(call), openSearch }).then(sendResponse);
     return true; // async response; the SW stays alive while it is pending
   });
 }
