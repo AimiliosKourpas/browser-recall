@@ -11,7 +11,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const root = join(here, '../..');
+const root = join(here, '..');
 const variants = process.argv.slice(2).length ? process.argv.slice(2) : ['base', 'test', 'dyn', 'dup', 'badcsp', 'nocsp'];
 
 const CSP =

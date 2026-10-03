@@ -1,0 +1,13 @@
+{
+  "extName": { "message": "Browser Recall", "description": "Extension name" },
+  "extDescription": { "message": "Find any page you've seen before. Private and local, no account.", "description": "Extension description (store short description is set separately)" },
+  "actionTitle": { "message": "Search your browsing memory", "description": "Toolbar button tooltip" },
+  "cmdOpenSearch": { "message": "Open search", "description": "Keyboard command description" },
+  "searchPageTitle": { "message": "Browser Recall", "description": "Search page <title>" },
+  "searchInputLabel": { "message": "Search your browsing memory", "description": "Accessible label of the search input" },
+  "searchEngineStarting": { "message": "Starting the local search engine…", "description": "Status while the offscreen engine starts" },
+  "searchEngineReady": { "message": "Local search engine ready.", "description": "Status when the engine answered" },
+  "searchEngineError": { "message": "The local search engine could not be started.", "description": "Status when the engine did not answer" },
+  "onboardingPageTitle": { "message": "Welcome to Browser Recall", "description": "Onboarding page <title> and heading" },
+  "onboardingBody": { "message": "Browser Recall is installed. Everything stays on this device. Setup arrives in an upcoming update.", "description": "Placeholder onboarding text (consent flow is a later milestone)" }
+}

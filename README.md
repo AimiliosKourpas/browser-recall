@@ -1,6 +1,14 @@
-# browser-recall
-Privacy-first local search for your browsing memory ("Find anything you've seen before").
+# Browser Recall
+**Find anything you've seen before.** A privacy-first Chrome extension (Manifest V3) that turns your browsing history into a fast, local, searchable memory. No account, no backend, no telemetry, no paid AI — your browsing data never leaves the device.
 
-- Source of truth: `BROWSER_RECALL_MASTER_BLUEPRINT.md`
-- Status: M0 (validation spikes) complete — see `docs/spikes/M0-RESULTS.md`, `docs/adr/`, `docs/HANDOFF.md`
-- `spikes/` is throwaway M0 code; production code starts in M1.
+Status: **M1 (production foundation) complete.** Search itself starts in M2. See `docs/HANDOFF.md`.
+
+## Develop
+```
+npm ci
+npm run check            # typecheck, lint, unit tests, build, built-manifest tests, size limit
+xvfb-run -a npm run e2e  # Playwright on a headed Chromium with the built extension (CHROMIUM_PATH selects another build)
+npm run build            # → .output/chrome-mv3 (load unpacked at chrome://extensions)
+```
+## Where things are
+`BROWSER_RECALL_MASTER_BLUEPRINT.md` product + architecture + plan · `docs/spikes/M0-RESULTS.md` measured evidence · `docs/milestones/` milestone reports · `docs/adr/` decisions · `src/` production code · `spikes/` throwaway M0 code · `CONTRIBUTING.md` · `SECURITY.md` · MIT licensed.
