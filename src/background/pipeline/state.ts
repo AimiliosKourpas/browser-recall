@@ -9,6 +9,22 @@ export const STATE_KEY = 'br:state';
 
 const ms = z.number().finite().nonnegative();
 
+/** User settings (M8). Defaults are PRODUCT_SPEC §5.6: 12 months, 1 GB, mirrored deletion on, not paused. */
+export const settingsSchema = z.object({
+  /** pause: no live history sync, no import/reconcile, no Deep Search capture; resuming reconciles the gap */
+  paused: z.boolean(),
+  /** History + Deep Search retention in months; null = keep until deleted. Saved items never expire. */
+  retentionMonths: z.number().int().min(1).max(1200).nullable(),
+  /** storage cap in MB (decimal); oldest Deep Search text is trimmed first */
+  capMb: z.number().int().min(50).max(100_000),
+  /** mirrored deletion (ADR-006) */
+  mirrorDeletion: z.boolean(),
+});
+export type Settings = z.infer<typeof settingsSchema>;
+export const defaultSettings = (): Settings => ({ paused: false, retentionMonths: 12, capMb: 1000, mirrorDeletion: true });
+export const settingsPatchSchema = settingsSchema.partial().strict();
+export type SettingsPatch = z.infer<typeof settingsPatchSchema>;
+
 export const stateSchema = z.object({
   consent: z.object({ version: z.number().int().positive(), at: ms }).nullable(),
   import: z.object({
@@ -32,6 +48,7 @@ export const stateSchema = z.object({
   deep: z
     .object({ enabled: z.boolean(), enabledAt: ms.nullable(), excluded: z.array(z.string().max(255)).max(500) })
     .default({ enabled: false, enabledAt: null, excluded: [] }),
+  settings: settingsSchema.default(defaultSettings()),
 });
 export type PipelineState = z.infer<typeof stateSchema>;
 
@@ -43,6 +60,7 @@ export const defaultState = (): PipelineState => ({
   lastMaintenanceAt: null,
   lastIntegrity: null,
   deep: { enabled: false, enabledAt: null, excluded: [] },
+  settings: defaultSettings(),
 });
 
 export interface StorageLike {

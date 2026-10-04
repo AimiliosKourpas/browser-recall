@@ -2,6 +2,7 @@
 // anything that fails is ignored. Responses use the Result envelope so errors cross the messaging boundary as data.
 import { z } from 'zod';
 import { engineCallSchema, engineInfoSchema } from '../engine/contract';
+import { settingsPatchSchema, settingsSchema } from '../background/pipeline/state';
 
 /** UI page -> service worker */
 export const swMessageSchema = z.discriminatedUnion('type', [
@@ -24,6 +25,9 @@ export const swMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sw/deep-exclude'), domain: z.string().min(1).max(255) }),
   z.object({ type: z.literal('sw/deep-include'), domain: z.string().min(1).max(255) }),
   z.object({ type: z.literal('sw/deep-clear') }),
+  /** settings (M8): read, and a validated partial update */
+  z.object({ type: z.literal('sw/settings-get') }),
+  z.object({ type: z.literal('sw/settings-set'), patch: settingsPatchSchema }),
   /** any validated engine call (search, writes, deletes, maintenance…) */
   z.object({ type: z.literal('sw/engine'), call: engineCallSchema }),
 ]);
@@ -43,6 +47,7 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: z.infer<type
 export const ensureEngineResultSchema = resultSchema(engineInfoSchema);
 export const engineCallResultSchema = resultSchema(z.unknown());
 export const openSearchResultSchema = resultSchema(z.object({ opened: z.literal(true), surface: z.enum(['overlay', 'window']).optional() }));
+export const settingsResultSchema = resultSchema(settingsSchema);
 export const deepStatusSchema = z.object({ enabled: z.boolean(), permission: z.boolean(), consent: z.boolean(), excluded: z.array(z.string()) });
 export const deepStatusResultSchema = resultSchema(deepStatusSchema);
 export const pipelineStatusSchema = z.object({
@@ -55,6 +60,7 @@ export const pipelineStatusSchema = z.object({
   lastReconcileAt: z.number().nullable(),
   lastMaintenanceAt: z.number().nullable(),
   lastIntegrity: z.object({ at: z.number(), ok: z.boolean() }).nullable(),
+  paused: z.boolean(),
 });
 export const pipelineStatusResultSchema = resultSchema(pipelineStatusSchema);
 export const pingResultSchema = resultSchema(engineInfoSchema);

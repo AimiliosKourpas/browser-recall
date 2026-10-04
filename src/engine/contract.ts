@@ -10,6 +10,8 @@ import {
   savePageSchema,
   searchParamsSchema,
   type CapSummary,
+  type DomainStat,
+  type PageInfo,
   type DeleteSummary,
   type ExportData,
   type IntegrityReport,
@@ -53,6 +55,8 @@ export const engineCallSchema = z.discriminatedUnion('method', [
   params('enforceCap', { maxBytes: z.number().int().positive() }),
   params('maintenance', { vacuumPages: z.number().int().min(1).max(5000).optional(), minFreePages: z.number().int().min(0).optional(), ftsMerge: z.boolean().optional() }),
   z.object({ method: z.literal('stats') }),
+  params('domainStats', { limit: z.number().int().min(1).max(200) }),
+  params('pageInfo', { url }),
   z.object({ method: z.literal('integrityCheck') }),
   params('exportData', { scope: z.enum(['saved', 'all']), now: z.number().finite() }),
   params('importData', { data: exportDataSchema }),
@@ -82,6 +86,8 @@ export interface EngineResults {
   enforceCap: CapSummary;
   maintenance: MaintenanceSummary;
   stats: Stats;
+  domainStats: DomainStat[];
+  pageInfo: PageInfo | null;
   integrityCheck: IntegrityReport;
   exportData: ExportData;
   importData: { pages: number; snippets: number; skipped: number };

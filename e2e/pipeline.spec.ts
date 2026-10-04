@@ -33,7 +33,7 @@ test('consent gate → import of existing history → live sync → mirrored del
   // the onboarding consent screen: explicit button, no automatic import
   const onboarding = await openExtensionPage(context, extensionId, 'onboarding.html');
   await expect(onboarding.getByRole('button', { name: 'Allow and import history' })).toBeVisible();
-  await expect(onboarding.getByText('It never sends it anywhere.')).toBeVisible();
+  await expect(onboarding.getByText(/makes no network requests/)).toBeVisible();
   await onboarding.getByRole('button', { name: 'Allow and import history' }).click();
   await expect(onboarding.getByText(/Import complete/)).toBeVisible({ timeout: 30_000 });
   await onboarding.close(); // the import never needed the page

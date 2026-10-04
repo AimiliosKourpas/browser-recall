@@ -27,7 +27,7 @@ export interface CaptureDeps {
 
 export type CaptureOutcome =
   | { captured: true; changed: boolean }
-  | { captured: false; reason: 'disabled' | 'no-consent' | 'no-permission' | 'ineligible' | 'excluded' | 'incognito' | 'skipped-page' | 'extract-failed' | 'engine' };
+  | { captured: false; reason: 'disabled' | 'paused' | 'no-consent' | 'no-permission' | 'ineligible' | 'excluded' | 'incognito' | 'skipped-page' | 'extract-failed' | 'engine' };
 
 const PRIVATE_HOST = /^(localhost|.*\.(local|localdomain|internal|lan|home|corp))$/i;
 
@@ -59,6 +59,7 @@ export async function captureTab(tab: CaptureTab, deps: CaptureDeps): Promise<Ca
   const state = await deps.readState();
   if (!state.deep.enabled) return { captured: false, reason: 'disabled' };
   if (!hasValidConsent(state)) return { captured: false, reason: 'no-consent' };
+  if (state.settings.paused) return { captured: false, reason: 'paused' };
   if (tab.id === undefined || !isEligibleUrl(tab.url)) return { captured: false, reason: 'ineligible' };
   if (tab.incognito) return { captured: false, reason: 'incognito' };
   if (isExcluded(tab.url, state.deep.excluded)) return { captured: false, reason: 'excluded' };

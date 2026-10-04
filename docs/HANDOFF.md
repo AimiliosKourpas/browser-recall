@@ -1,4 +1,9 @@
-# Handoff (after M7)
+# Handoff (after M8): NEXT SESSION = RELEASE SESSION
+
+All planned implementation (M0–M8) is done on `claude/m8-settings-release-polish` (stacked on `claude/m7-overlay-integration`); do not start new features. Read `docs/RELEASE-CHECKLIST.md` first: it lists the five BLOCKERS (icons, manual real-Chrome tests incl. the optional-permission prompt, privacy-policy completion/URL/contact, store listing assets + name check, dashboard declarations) and the exact manual test scripts. Then `docs/milestones/M8-RESULTS.md`, `docs/PERMISSIONS.md`, `docs/PRIVACY-POLICY.md` (draft), `docs/THREAT-MODEL.md`, ADR-007/014/015.
+Commands: `npm ci` · `npm run check` · `npm run build && npm run build:e2e && xvfb-run -a npm run e2e` (29 tests, ≈4 min) · `npm run zip` (production package, `.output/browser-recall-<version>-chrome.zip`) · `CHROMIUM_PATH=<Chrome 116>` for the compat run. Size budgets: JS 175 kB, total 620 kB (now 163.5 / 575.1).
+Settings/messages added in M8: `sw/settings-get|set`, `br:state.settings`, engine `domainStats`/`pageInfo`, alarm `br-title-refresh`.
+
 
 **M7 done on `claude/m7-overlay-integration`** (see `docs/milestones/M7-RESULTS.md`, ADR-003 record, `docs/qa/overlay-matrix.md`): overlay + window fallback, `sw/open-search {tabId}`, `sw/overlay-close`, WAR for `search.html`. e2e overlay tests need both builds (`npm run build && npm run build:e2e`) and `xvfb-run`. JS size headroom is 3.75 kB.
 

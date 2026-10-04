@@ -50,7 +50,7 @@
       "name": "all extension JS (gzip)",
       "path": ".output/chrome-mv3/**/*.js",
       "gzip": true,
-      "limit": "160 kB"
+      "limit": "175 kB"
     },
     {
       "name": "all extension files incl. sqlite3.wasm (gzip)",

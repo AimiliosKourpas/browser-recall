@@ -39,6 +39,13 @@ export function registerBackground(): void {
     hash: sha256Hex,
     now: () => Date.now(),
   };
+  // toolbar paused indicator (badge text persists for the browser session; re-applied on every wake and settings change)
+  const applyPausedBadge = async () => {
+    const paused = (await stateStore.read()).settings.paused;
+    void chrome.action.setBadgeBackgroundColor({ color: '#6b7280' });
+    void chrome.action.setBadgeText({ text: paused ? 'II' : '' });
+  };
+  void applyPausedBadge();
   const rememberDeps: RememberDeps = {
     engine,
     extract: async (tabId) => {
@@ -106,7 +113,10 @@ export function registerBackground(): void {
         const tab = tabId === undefined ? await activeTab() : await chrome.tabs.get(tabId);
         return remember(tab, undefined, snippet);
       },
-    }, sender.tab?.id).then(sendResponse);
+    }, sender.tab?.id).then((result) => {
+      if (message.type === 'sw/settings-set') void applyPausedBadge();
+      sendResponse(result);
+    });
     return true; // async response; the SW stays alive while it is pending
   });
 }

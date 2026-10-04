@@ -51,6 +51,10 @@ async function dispatch(call: EngineCall, ctx: HandlerContext): Promise<unknown>
       return store.enforceCap(call.params.maxBytes);
     case 'maintenance':
       return store.maintenance(call.params);
+    case 'domainStats':
+      return store.domainStats(call.params.limit);
+    case 'pageInfo':
+      return store.pageInfo(call.params.url);
     case 'stats':
       return store.stats();
     case 'integrityCheck':
