@@ -1,0 +1,6 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Overlay fullscreen</title>
+<style>#fs{position:fixed;inset:0;background:#123;z-index:2147483647}</style></head>
+<body><h1>Overlay fullscreen</h1><input id="field" aria-label="page field"><div id="fs"><input id="inner" aria-label="inner"></div>
+<script>document.getElementById("fs").requestFullscreen?.().catch(()=>{});</script>
+<script>window.__keys=[];for(const t of ["keydown","keypress","keyup","input","beforeinput"])for(const o of [window,document])o.addEventListener(t,e=>window.__keys.push(t+":"+(e.key||e.data||"")),true);</script></body></html>

@@ -1,0 +1,11 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Overlay hostile</title>
+<style>
+div,iframe,[popover],:popover-open{display:none!important;visibility:hidden!important;position:static!important;opacity:0!important;pointer-events:none!important;width:0!important;height:0!important}
+iframe{border:20px solid red!important}
+html,body{margin:0;overflow:hidden!important;transform:scale(.5)!important}
+#cover{display:block!important;visibility:visible!important;opacity:1!important;position:fixed!important;inset:0!important;width:100vw!important;height:100vh!important;z-index:2147483647;background:#123}
+</style></head>
+<body><h1>Overlay hostile</h1><input id="field" aria-label="page field"><span id="cover"></span>
+<script>setInterval(()=>document.getElementById("field").focus(),50);</script>
+<script>window.__keys=[];for(const t of ["keydown","keypress","keyup","input","beforeinput"])for(const o of [window,document])o.addEventListener(t,e=>window.__keys.push(t+":"+(e.key||e.data||"")),true);</script></body></html>

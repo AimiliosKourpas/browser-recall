@@ -16,7 +16,9 @@ describe('manifest allowlist (ADR-001)', () => {
     expect(m).not.toHaveProperty('host_permissions');
     expect(m).not.toHaveProperty('content_scripts');
     expect(m).not.toHaveProperty('externally_connectable');
-    expect(m).not.toHaveProperty('web_accessible_resources'); // added in M7 (overlay) with use_dynamic_url, via ADR-003
+  });
+  it('the only web-accessible resource is the search page, for http(s) pages, with a dynamic URL (ADR-003)', () => {
+    expect(m.web_accessible_resources).toEqual([{ resources: ['search.html'], matches: ['https://*/*', 'http://*/*'], use_dynamic_url: true }]);
   });
   it('broad host access is optional only', () => {
     expect([...m.optional_host_permissions]).toEqual(ALLOWED_OPTIONAL_HOSTS);

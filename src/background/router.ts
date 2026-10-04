@@ -9,7 +9,8 @@ export interface RouterDeps {
   engineCall: (call: EngineCall) => Promise<unknown>;
   remember: (tabId: number | undefined, selection: boolean) => Promise<unknown>;
   pipeline: { grantConsent(version: number): Promise<void>; revokeConsent(): Promise<void>; status(): Promise<unknown> };
-  openSearch: () => Promise<void>;
+  openSearch: (tabId: number | undefined) => Promise<'overlay' | 'window'>;
+  closeOverlay: (tabId: number | undefined) => Promise<void>;
   deep: Pick<DeepController, 'status' | 'enable' | 'disable' | 'exclude' | 'include' | 'clear'>;
 }
 
@@ -23,7 +24,7 @@ export function acceptMessage(raw: unknown, sender: SenderLike, runtimeId: strin
   return parsed.data;
 }
 
-export async function routeMessage(message: SwMessage, deps: RouterDeps): Promise<Result<unknown>> {
+export async function routeMessage(message: SwMessage, deps: RouterDeps, senderTabId?: number): Promise<Result<unknown>> {
   try {
     switch (message.type) {
       case 'sw/ensure-engine':
@@ -55,8 +56,10 @@ export async function routeMessage(message: SwMessage, deps: RouterDeps): Promis
       case 'sw/deep-clear':
         return { ok: true, data: await deps.deep.clear() };
       case 'sw/open-search':
-        await deps.openSearch();
-        return { ok: true, data: { opened: true } };
+        return { ok: true, data: { opened: true, surface: await deps.openSearch(message.tabId) } };
+      case 'sw/overlay-close':
+        await deps.closeOverlay(senderTabId);
+        return { ok: true, data: { closed: true } };
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

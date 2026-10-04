@@ -5,10 +5,18 @@ import { t } from '../../shared/i18n';
 import { ensureEngineResultSchema, pipelineStatusResultSchema } from '../../shared/messages';
 import type { PipelineStatus } from '../../background/pipeline/controller';
 import { avatar, displayUrl, relativeTime, resultHref, splitHighlights } from './format';
+import { isOverlayLocation } from '../../overlay/protocol';
 import { actionForKey, moveIndex, toggleToken } from './keys';
 
 type Ready = 'starting' | 'ready' | 'error';
 const DEBOUNCE_MS = 30;
+const IN_OVERLAY = isOverlayLocation(location.search);
+
+/** Closes this search surface: the overlay (via the service worker, which knows the host tab) or the popup window. */
+const closeSurface = () => {
+  if (IN_OVERLAY) void chrome.runtime.sendMessage({ type: 'sw/overlay-close' });
+  else window.close();
+};
 
 const CHIPS: { token: string; label: () => string; group?: string[] }[] = [
   { token: 'when:today', label: () => t('chipToday'), group: ['when:week', 'when:month'] },
@@ -69,6 +77,14 @@ export function App() {
   const seq = useRef(0);
   const input = useRef<HTMLInputElement>(null);
   const filters = useRef<HTMLDivElement>(null);
+
+  // The overlay host focuses the <iframe>; the framed document then gets window focus and must hand it to the input (ADR-003).
+  useEffect(() => {
+    const focusInput = () => input.current?.focus();
+    window.addEventListener('focus', focusInput);
+    focusInput();
+    return () => window.removeEventListener('focus', focusInput);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -148,7 +164,7 @@ export function App() {
   const open = (r: SearchResult | undefined, active: boolean, closeWindow: boolean) => {
     if (!r) return;
     void chrome.tabs.create({ url: resultHref(r), active }).then(() => {
-      if (closeWindow) window.close();
+      if (closeWindow) closeSurface();
     });
   };
 
@@ -158,7 +174,7 @@ export function App() {
     e.preventDefault();
     if (action.kind === 'move') setSelected((s) => moveIndex(s, action.delta, results.length));
     else if (action.kind === 'open') open(current, action.active, action.closeWindow);
-    else if (action.kind === 'close') window.close();
+    else if (action.kind === 'close') closeSurface();
     else if (action.kind === 'focus-filters') filters.current?.querySelector('button')?.focus();
   };
 
