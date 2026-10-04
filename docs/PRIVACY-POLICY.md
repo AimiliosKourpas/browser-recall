@@ -3,7 +3,7 @@
 **Publisher:** Aimilianos Kourpas-Danas  
 **Contact:** emil.pedos@gmail.com  
 **Effective date:** 4 October 2026  
-**This policy is published at:** [PUBLIC POLICY URL]
+**This policy is published at:** https://aimilioskourpas.github.io/browser-recall/PRIVACY-POLICY
 
 Browser Recall is a local-first Chrome extension that makes your own browsing searchable.
 
