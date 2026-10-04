@@ -1,8 +1,8 @@
 # Browser Recall privacy policy
 
-**Publisher:** [PUBLISHER LEGAL NAME]  
-**Contact:** [CONTACT EMAIL]  
-**Effective date:** [EFFECTIVE DATE]  
+**Publisher:** Aimilianos Kourpas-Danas  
+**Contact:** emil.pedos@gmail.com  
+**Effective date:** 4 October 2026  
 **This policy is published at:** [PUBLIC POLICY URL]
 
 Browser Recall is a local-first Chrome extension that makes your own browsing searchable.
@@ -36,4 +36,4 @@ Browser Recall does not encrypt its local index. Anyone who can use your compute
 The use of information received from Chrome APIs adheres to the Chrome Web Store User Data Policy, including the Limited Use requirements: data is used only to provide the user-facing search feature, is not transferred except as necessary for that, is not used for advertising, and is not read by humans.
 
 ## Changes and contact
-If a change affects what data is read or stored, the in-product consent version is raised and you are asked again before anything new is read. Questions or requests: [CONTACT EMAIL].
+If a change affects what data is read or stored, the in-product consent version is raised and you are asked again before anything new is read. Questions or requests: emil.pedos@gmail.com.
