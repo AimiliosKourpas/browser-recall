@@ -13,6 +13,14 @@ interface SahPool {
 
 let sqlitePromise: Promise<Sqlite3> | undefined;
 
+/**
+ * sqlite-wasm auto-installs the `opfs` and `opfs-wl` VFSes (they need a separate sqlite3-opfs-async-proxy.js worker we do not ship)
+ * when it initialises in a worker; the attempt fails and logs console errors that Chrome lists on the extension's error page.
+ * We only ever use `opfs-sahpool`, which stays enabled. sqlite reads this global once, at init.
+ */
+export const SQLITE_API_CONFIG = { disable: { vfs: { opfs: true, 'opfs-wl': true } } } as const;
+(globalThis as unknown as { sqlite3ApiConfig?: object }).sqlite3ApiConfig = SQLITE_API_CONFIG;
+
 /** `wasmUrl` (browser) tells the loader where the bundled sqlite3.wasm is; omitted under Node. */
 export function loadSqlite(wasmUrl?: string): Promise<Sqlite3> {
   sqlitePromise ??= wasmUrl

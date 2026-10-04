@@ -21,7 +21,7 @@ This table is checked against `src/manifest.ts` by `tests/policy.test.ts`: the p
 | `http://*/*` | Same, for http pages. |
 
 ## Web-accessible resources
-`search.html` only, for http(s) pages, with a dynamic URL: lets the search overlay show the search page inside the page you are on. It exposes no data.
+`overlay.html` only, for http(s) pages, with a dynamic URL: lets the search overlay show the search page inside the page you are on. It exposes no data. (`search.html`, used for the toolbar/popup window, is not web-accessible.)
 
 ## Not requested
 `tabs`, `webNavigation`, `bookmarks`, `cookies`, `webRequest`, `downloads`, `management`, `identity`, `nativeMessaging`, `proxy`, `debugger`, favicons. No content scripts are declared; there is no required host access; there is no `externally_connectable`.

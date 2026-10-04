@@ -176,8 +176,8 @@ test('overlay frame is accessible (axe inside the injected search page)', async 
     const tabId = await tool.evaluate(async (u) => (await chrome.tabs.query({ url: u }))[0]?.id, `${origin}/f/overlay-plain.html`);
     await page.bringToFront();
     await send(tool, { type: 'sw/open-search', tabId });
-    await expect.poll(() => page.frames().some((f) => f.url().includes('/search.html'))).toBe(true);
-    const frame = page.frames().find((f) => f.url().includes('/search.html'));
+    await expect.poll(() => page.frames().some((f) => f.url().includes('/overlay.html'))).toBe(true);
+    const frame = page.frames().find((f) => f.url().includes('/overlay.html'));
     await expect(frame!.locator('[data-engine-state="ready"]')).toBeVisible();
     await frame?.evaluate(axeSource);
     const r = await frame?.evaluate<{ violations: { id: string; impact: string }[] }>('axe.run()');

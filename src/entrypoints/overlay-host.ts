@@ -4,7 +4,7 @@ import { isOverlayCommand } from '../overlay/protocol';
 
 export default defineUnlistedScript(() => {
   const w = window as Window & { __brOverlay?: ReturnType<typeof createOverlay> };
-  w.__brOverlay ??= createOverlay({ doc: document, searchUrl: chrome.runtime.getURL('/search.html') });
+  w.__brOverlay ??= createOverlay({ doc: document, searchUrl: chrome.runtime.getURL('/overlay.html') });
   const overlay = w.__brOverlay;
   // idempotent: a second injection reuses the first instance, and only one listener is ever registered per instance
   const flag = '__brOverlayListener';

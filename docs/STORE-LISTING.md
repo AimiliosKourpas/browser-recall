@@ -45,7 +45,7 @@ Good to know
 - **offscreen**: Host the local search engine (WebAssembly SQLite) in a hidden extension page; the service worker cannot run it directly.
 - **alarms**: Schedule the daily local cleanup (retention and storage limit), the daily history reconcile, resuming an interrupted import, and a one-time re-read of a just-visited page's title. No network involved.
 - **Optional host permissions `https://*/*`, `http://*/*` (Deep Search)**: Requested only when the user presses "Turn on Deep Search" in Settings, with Chrome's own prompt. Needed to read the text of pages the user opens so they can be found by content. The user can decline, or remove it at any time in chrome://extensions; History search and remembered items keep working either way. Without it Deep Search does nothing.
-- **Web-accessible resource `search.html`** (http/https pages, dynamic URL): lets the search overlay display the extension's search page in a frame on the current page.
+- **Web-accessible resource `overlay.html`** (http/https pages, dynamic URL): lets the search overlay display the extension's search page in a frame on the current page.
 
 ## Remote code
 No. All JavaScript and WebAssembly are packaged in the extension; there is no remote code, no `eval`, no externally hosted script; the extension pages' CSP is `default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'none'; …`.

@@ -24,7 +24,7 @@ describe.skipIf(!existsSync(DIR))('built extension', () => {
     expect(manifest.manifest_version).toBe(3);
   });
   it('contains the expected entrypoints', () => {
-    for (const f of ['background.js', 'engine-worker.js', 'offscreen.html', 'search.html', 'onboarding.html', 'settings.html', '_locales/en/messages.json']) expect(existsSync(join(DIR, f)), f).toBe(true);
+    for (const f of ['background.js', 'engine-worker.js', 'offscreen.html', 'search.html', 'overlay.html', 'onboarding.html', 'settings.html', '_locales/en/messages.json']) expect(existsSync(join(DIR, f)), f).toBe(true);
   });
   it('every i18n key referenced by the manifest exists in the built catalogue', () => {
     const catalogue = JSON.parse(readFileSync(join(DIR, '_locales/en/messages.json'), 'utf8')) as Record<string, unknown>;

@@ -11,12 +11,12 @@ import type { FixtureServer } from '../fixtures-server';
  * `e2e: true` loads the e2e build (host permission for http://fixture.test/*) and maps fixture.test to the local fixture server, so
  * activeTab-style extraction and Deep Search capture can be exercised without the permission prompt Playwright cannot click.
  */
-export async function launchExtension(userDataDir: string, opts: { e2e?: boolean } = {}): Promise<{ context: BrowserContext; extensionId: string }> {
+export async function launchExtension(userDataDir: string, opts: { e2e?: boolean; debugPort?: number } = {}): Promise<{ context: BrowserContext; extensionId: string }> {
   const dir = opts.e2e ? E2E_EXTENSION_DIR : EXTENSION_DIR;
   const context = await chromium.launchPersistentContext(userDataDir, {
     ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
     headless: false,
-    args: [`--disable-extensions-except=${dir}`, `--load-extension=${dir}`, '--no-sandbox', ...(opts.e2e ? ['--host-resolver-rules=MAP fixture.test 127.0.0.1'] : [])],
+    args: [`--disable-extensions-except=${dir}`, `--load-extension=${dir}`, '--no-sandbox', ...(opts.e2e ? ['--host-resolver-rules=MAP fixture.test 127.0.0.1'] : []), ...(opts.debugPort ? [`--remote-debugging-port=${opts.debugPort}`] : [])],
   });
   const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
   return { context, extensionId: new URL(worker.url()).host };
@@ -57,3 +57,34 @@ export async function send<T = unknown>(page: Page, message: object): Promise<Ok
 }
 
 export const tabIdOf = (page: Page, url: string): Promise<number | undefined> => page.evaluate(async (u) => (await chrome.tabs.query({ url: u }))[0]?.id, url);
+
+/** A free local TCP port (for --remote-debugging-port). */
+export async function freePort(): Promise<number> {
+  const { createServer } = await import('node:net');
+  return new Promise((resolve, reject) => {
+    const srv = createServer();
+    srv.listen(0, '127.0.0.1', () => {
+      const { port } = srv.address() as { port: number };
+      srv.close(() => resolve(port));
+    });
+    srv.on('error', reject);
+  });
+}
+
+export interface CdpTarget {
+  type: string;
+  url: string;
+  title: string;
+}
+
+/** Every browser target (windows, popups, workers, error pages) as the browser itself reports it: what a user would see. */
+export async function cdpTargets(port: number): Promise<CdpTarget[]> {
+  const { get } = await import('node:http');
+  return new Promise((resolve, reject) => {
+    get(`http://127.0.0.1:${port}/json`, (res) => {
+      let body = '';
+      res.on('data', (chunk: Buffer) => (body += chunk.toString()));
+      res.on('end', () => resolve(JSON.parse(body) as CdpTarget[]));
+    }).on('error', reject);
+  });
+}
