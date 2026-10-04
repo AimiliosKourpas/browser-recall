@@ -7,6 +7,9 @@ export const PERMISSIONS = ['history', 'storage', 'unlimitedStorage', 'contextMe
 /** Deep Search host access is OPTIONAL and requested at runtime from a user gesture (ADR-001). */
 export const OPTIONAL_HOST_PERMISSIONS = ['https://*/*', 'http://*/*'] as const;
 
+/** Approved production artwork (public/icons, copied verbatim to the package root). */
+export const ICONS = { '16': 'icons/16.png', '32': 'icons/32.png', '48': 'icons/48.png', '128': 'icons/128.png' } as const;
+
 export const OVERLAY_RESOURCES = ['search.html'] as const;
 export const OVERLAY_MATCHES = ['https://*/*', 'http://*/*'] as const;
 
@@ -44,7 +47,8 @@ export function buildManifest(opts: { e2e?: boolean } = {}) {
     optional_host_permissions: [...OPTIONAL_HOST_PERMISSIONS],
     // M7 overlay: the search page may be framed by web pages (the injected overlay host). use_dynamic_url hides the static URL from page probing (ADR-003).
     web_accessible_resources: [{ resources: [...OVERLAY_RESOURCES], matches: [...OVERLAY_MATCHES], use_dynamic_url: true }],
-    action: { default_title: '__MSG_actionTitle__' },
+    icons: { ...ICONS },
+    action: { default_title: '__MSG_actionTitle__', default_icon: { ...ICONS } },
     commands: {
       'open-search': {
         suggested_key: { default: 'Ctrl+Shift+Y', mac: 'Command+Shift+Y' },
