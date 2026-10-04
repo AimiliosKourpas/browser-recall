@@ -22,7 +22,7 @@ test('opens the onboarding page on install', async ({ context, extensionId }) =>
 
 test('service worker creates the offscreen document and reaches the engine worker', async ({ context, extensionId }) => {
   const page = await openExtensionPage(context, extensionId, 'search.html');
-  await expect(page.getByRole('status')).toHaveText('Local search engine ready.');
+  await expect(page.locator('[data-engine-state="ready"]')).toBeVisible();
   const contexts = await page.evaluate(() => chrome.runtime.getContexts({ contextTypes: ['OFFSCREEN_DOCUMENT'] }).then((c) => c.length));
   expect(contexts).toBe(1);
   const raw = await page.evaluate(() => chrome.runtime.sendMessage({ type: 'sw/ensure-engine' }));
@@ -31,7 +31,7 @@ test('service worker creates the offscreen document and reaches the engine worke
 
 test('engine survives a service worker restart (stateless SW)', async ({ context, extensionId }) => {
   const page = await openExtensionPage(context, extensionId, 'search.html');
-  await expect(page.getByRole('status')).toHaveText('Local search engine ready.');
+  await expect(page.locator('[data-engine-state="ready"]')).toBeVisible();
   const first = (await page.evaluate(() => chrome.runtime.sendMessage({ type: 'sw/ensure-engine' }))) as { data: { instanceId: string } };
   const cdp = await context.newCDPSession(page);
   const versions: { versionId: string }[] = [];

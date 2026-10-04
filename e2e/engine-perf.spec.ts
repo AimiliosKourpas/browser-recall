@@ -11,7 +11,7 @@ test('engine in the browser: ingest throughput and search latency stay in budget
   test.setTimeout(180_000);
   const docs = generateCorpus({ pages: PAGES, now: NOW });
   const page = await openExtensionPage(context, extensionId, 'search.html');
-  await expect(page.getByRole('status')).toHaveText('Local search engine ready.');
+  await expect(page.locator('[data-engine-state="ready"]')).toBeVisible();
 
   const rows = docs.map((d) => ({ url: d.url, title: d.title, lastVisitTime: d.lastVisit, visitCount: d.visitCount }));
   const t0 = Date.now();

@@ -19,7 +19,7 @@ export async function launchExtension(userDataDir: string): Promise<{ context: B
 /** An extension page to send messages from (the search page: it only pings the engine, it never grants consent). */
 export async function toolPage(context: BrowserContext, extensionId: string): Promise<Page> {
   const page = await openExtensionPage(context, extensionId, 'search.html');
-  await expect(page.getByRole('status')).toHaveText('Local search engine ready.');
+  await expect(page.locator('[data-engine-state="ready"]')).toBeVisible();
   return page;
 }
 

@@ -50,7 +50,7 @@ async function expectSeeded(page: Page) {
 test('engine: write → search → service-worker restart → offscreen recreation → still searchable (same OPFS database)', async ({ context, extensionId }) => {
   const page = await openExtensionPage(context, extensionId, 'search.html');
   test.info().annotations.push({ type: 'browser', description: await page.evaluate(() => navigator.userAgent) }); // shows which Chrome ran (CHROMIUM_PATH compat job)
-  await expect(page.getByRole('status')).toHaveText('Local search engine ready.');
+  await expect(page.locator('[data-engine-state="ready"]')).toBeVisible();
   await seed(page);
   await expectSeeded(page);
   const first = await call(page, { method: 'ping' });
@@ -84,7 +84,7 @@ test('engine: data survives a full browser restart (same profile)', async () => 
     });
     const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
     const page = await openExtensionPage(context, new URL(worker.url()).host, 'search.html');
-    await expect(page.getByRole('status')).toHaveText('Local search engine ready.');
+    await expect(page.locator('[data-engine-state="ready"]')).toBeVisible();
     return { context, page };
   };
   try {
@@ -102,7 +102,7 @@ test('engine: data survives a full browser restart (same profile)', async () => 
 
 test('engine: validation gate and typed errors', async ({ context, extensionId }) => {
   const page = await openExtensionPage(context, extensionId, 'search.html');
-  await expect(page.getByRole('status')).toHaveText('Local search engine ready.');
+  await expect(page.locator('[data-engine-state="ready"]')).toBeVisible();
   // malformed calls never reach the engine: the service worker ignores them (no response → the page sees undefined)
   const bad = await page.evaluate(() => chrome.runtime.sendMessage({ type: 'sw/engine', call: { method: 'search', params: { query: 42 } } }).then((r) => r ?? 'ignored', () => 'ignored'));
   expect(bad).toBe('ignored');
@@ -117,7 +117,7 @@ test('privacy regression: a busy engine makes no network request', async ({ cont
   const seen: string[] = [];
   context.on('request', (r) => seen.push(r.url()));
   const page = await openExtensionPage(context, extensionId, 'search.html');
-  await expect(page.getByRole('status')).toHaveText('Local search engine ready.');
+  await expect(page.locator('[data-engine-state="ready"]')).toBeVisible();
   await seed(page);
   await expectSeeded(page);
   await call(page, { method: 'maintenance', params: { ftsMerge: true } });

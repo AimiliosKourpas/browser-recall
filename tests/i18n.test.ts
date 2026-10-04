@@ -19,7 +19,7 @@ describe('i18n catalogue', () => {
   });
   it('every t("key") used in src exists in the catalogue, and every catalogue key is used', () => {
     const used = new Set<string>();
-    for (const file of sourceFiles('src')) for (const m of readFileSync(file, 'utf8').matchAll(/\bt\('([A-Za-z]+)'\)/g)) used.add(m[1] as string);
+    for (const file of sourceFiles('src')) for (const m of readFileSync(file, 'utf8').matchAll(/\bt\('([A-Za-z]+)'[,)]/g)) used.add(m[1] as string);
     const manifest = readFileSync('src/manifest.ts', 'utf8');
     for (const m of manifest.matchAll(/__MSG_(\w+)__/g)) used.add(m[1] as string);
     const keys = Object.keys(catalogue);
