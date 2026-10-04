@@ -21,7 +21,7 @@ describe('policy ↔ manifest consistency', () => {
   });
   it('states that no host permission is required and that the CSP matches the manifest', () => {
     expect(permissions).toMatch(/no required host access/);
-    expect(permissions).toContain(buildManifest().content_security_policy.extension_pages.replace(/;/g, ';'));
+    expect(permissions).toContain(buildManifest().content_security_policy.extension_pages);
   });
   it('the privacy policy makes the central claims and links the permissions document', () => {
     const policy = doc('PRIVACY-POLICY.md');
