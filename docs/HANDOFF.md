@@ -1,4 +1,8 @@
-# Handoff (after M3)
+# Handoff (after M4)
+
+**M4 done on `claude/m4-search-ui`** (search UI, see `docs/milestones/M4-RESULTS.md`). The M3 notes below remain valid; the search page is no longer a stub: engine-ready signal is `data-engine-state="ready"` on `<main>`.
+
+# (M3 handoff)
 
 **State:** M0–M2 merged. **M3 done on branch `claude/m3-history-pipeline`, awaiting owner review/merge** (GitHub CI not yet run). Read `docs/milestones/M3-RESULTS.md` first, then M2-RESULTS and ADR-012/013/006. **Do not start M4 without owner approval.**
 

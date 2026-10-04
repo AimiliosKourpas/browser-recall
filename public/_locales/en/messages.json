@@ -15,25 +15,9 @@
     "message": "Open search",
     "description": "Keyboard command description"
   },
-  "searchPageTitle": {
-    "message": "Browser Recall",
-    "description": "Search page <title>"
-  },
   "searchInputLabel": {
     "message": "Search your browsing memory",
     "description": "Accessible label of the search input"
-  },
-  "searchEngineStarting": {
-    "message": "Starting the local search engine…",
-    "description": "Status while the offscreen engine starts"
-  },
-  "searchEngineReady": {
-    "message": "Local search engine ready.",
-    "description": "Status when the engine answered"
-  },
-  "searchEngineError": {
-    "message": "The local search engine could not be started.",
-    "description": "Status when the engine did not answer"
   },
   "onboardingPageTitle": {
     "message": "Welcome to Browser Recall",
@@ -74,5 +58,141 @@
   "onboardingError": {
     "message": "Something went wrong talking to the background service. Please reload this page.",
     "description": "Shown when the status request fails"
+  },
+  "searchPlaceholder": {
+    "message": "Search your browsing memory…",
+    "description": "Search input placeholder"
+  },
+  "searchHint": {
+    "message": "Type what you remember. Try site:example.com, \"exact phrase\", -word, when:week, is:saved.",
+    "description": "Empty-query hint"
+  },
+  "searchNoResults": {
+    "message": "No matches.",
+    "description": "No-results title"
+  },
+  "searchNoResultsHint": {
+    "message": "Try fewer words, remove a filter, or turn on Deep Search to search page text.",
+    "description": "No-results hint"
+  },
+  "searchError": {
+    "message": "Search failed. The local engine did not answer.",
+    "description": "Search error"
+  },
+  "searchRetry": {
+    "message": "Try again",
+    "description": "Retry button"
+  },
+  "searchSetupNeeded": {
+    "message": "Browser Recall is not set up yet: it has not been allowed to read your history.",
+    "description": "Shown when consent is missing"
+  },
+  "searchSetupButton": {
+    "message": "Set up Browser Recall",
+    "description": "Opens the onboarding page"
+  },
+  "searchResultsCount": {
+    "message": "$1 results",
+    "description": "Live-region result count"
+  },
+  "searchResultsLabel": {
+    "message": "Search results",
+    "description": "Listbox accessible name"
+  },
+  "searchApproximate": {
+    "message": "Approximate matches",
+    "description": "Heading above relaxed matches"
+  },
+  "searchDidYouMean": {
+    "message": "Did you mean",
+    "description": "Spelling suggestion prefix"
+  },
+  "badgeSaved": {
+    "message": "Saved",
+    "description": "Result badge"
+  },
+  "badgeSnippet": {
+    "message": "Snippet",
+    "description": "Result badge"
+  },
+  "matchTitleUrl": {
+    "message": "Title and address match",
+    "description": "Match line when the text did not match"
+  },
+  "timeNow": {
+    "message": "just now",
+    "description": "Relative time"
+  },
+  "timeMinutes": {
+    "message": "$1 min ago",
+    "description": "Relative time"
+  },
+  "timeHours": {
+    "message": "$1 h ago",
+    "description": "Relative time"
+  },
+  "timeDays": {
+    "message": "$1 d ago",
+    "description": "Relative time"
+  },
+  "timeMonths": {
+    "message": "$1 mo ago",
+    "description": "Relative time"
+  },
+  "footerPages": {
+    "message": "$1 pages",
+    "description": "Footer: number of indexed pages"
+  },
+  "footerImporting": {
+    "message": "Importing history… $1%",
+    "description": "Footer: import progress"
+  },
+  "footerUpToDate": {
+    "message": "history up to date",
+    "description": "Footer: sync state"
+  },
+  "filtersLabel": {
+    "message": "Filters",
+    "description": "Chip group label"
+  },
+  "chipToday": {
+    "message": "Today",
+    "description": "Filter chip"
+  },
+  "chipWeek": {
+    "message": "7 days",
+    "description": "Filter chip"
+  },
+  "chipMonth": {
+    "message": "30 days",
+    "description": "Filter chip"
+  },
+  "chipSaved": {
+    "message": "Saved",
+    "description": "Filter chip"
+  },
+  "chipSnippets": {
+    "message": "Snippets",
+    "description": "Filter chip"
+  },
+  "actionsLabel": {
+    "message": "Actions for the selected result",
+    "description": "Toolbar label"
+  },
+  "actionCopy": {
+    "message": "Copy link",
+    "description": "Row action"
+  },
+  "actionForget": {
+    "message": "Forget this page",
+    "description": "Row action: delete from Browser Recall's history copy"
+  },
+  "actionCopied": {
+    "message": "Copied",
+    "description": "Feedback"
+  },
+  "searchWorking": {
+    "message": "Searching…",
+    "description": "Loading state"
   }
 }
