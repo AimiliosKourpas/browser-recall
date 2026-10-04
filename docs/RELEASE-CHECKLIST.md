@@ -2,12 +2,31 @@
 
 Status after M8: implementation complete; everything below is release work. Production package: `npm ci && npm run build && npm run zip` → `.output/browser-recall-<version>-chrome.zip` (≈576 kB; no source maps, no e2e output, manifest without `host_permissions`/`content_scripts`/`icons`).
 
-## A. BLOCKERS BEFORE SUBMISSION
-1. **No extension icons.** `manifest.json` has no `icons` and `public/` has none. The store requires a 128×128 icon (also supply 16/32/48 and the toolbar `action.default_icon`). Needs a design decision and files, then `icons`/`action.default_icon` in `src/manifest.ts` (the manifest allowlist test must be updated deliberately).
-2. **Manual real-Chrome verification not done** (sections B–E). The optional-permission prompt, real shortcut/toolbar activeTab grant and real-site overlay matrix cannot be automated in the cloud environment.
-3. **Privacy policy is a draft** (`docs/PRIVACY-POLICY.md`): needs publisher name, contact/support email or issue URL, effective date, and a public URL (e.g. GitHub Pages) for the dashboard field.
-4. **Store listing assets and text not produced**: name decision/trademark check ("Browser Recall"), short + detailed description, ≥1 (ideally 5) 1280×800 or 640×400 screenshots, small promo tile 440×280, category, support contact.
-5. **Dashboard declarations not prepared**: single-purpose statement, per-permission justifications (use `docs/PERMISSIONS.md`), data-usage disclosures (collects web history and website content; none transmitted off device; Limited Use certification), remote-code answer "No", trader/non-trader declaration, visibility (recommend unlisted for the first submission).
+## TODAY: ordered manual QA in real Chrome (about 45 minutes; do this on the exact zip contents)
+Prepare: add the icons (`docs/STORE-ASSETS.md`), then `npm ci && npm run build && npm run release:check && npm run zip`. Unzip `.output/browser-recall-0.1.0-chrome.zip` to a folder and use that folder below (this is what the store receives). Use a **fresh Chrome profile** with some browsing history.
+1. `chrome://extensions` → Developer mode → **Load unpacked** → the unzipped folder. No errors in the card; icon shows; open "service worker" DevTools and keep it open for errors.
+2. **Onboarding** opens by itself. Read it: local-first, why History, Deep Search optional, how to search/Remember. Press **Allow and import history**; wait for "Import complete".
+3. **Search**: click the toolbar icon (or `chrome://extensions/shortcuts` to see/assign shortcuts first). Type part of a known page title; results appear; Enter opens it.
+4. **Shortcut + overlay** on 4 pages: a news article, GitHub, YouTube (video playing: space/k must not act on the video while typing), and a `chrome://extensions` page (expect the small window). Esc closes; focus returns to the page.
+5. **Remember page**: right-click an article → "Remember this page"; badge ✓; search a word from its body → "Saved" result. **Save selection**: select a sentence → right-click → "Save selection to memory"; search it → "Snippet"; open it → jumps to the passage.
+6. **Settings** (search footer → "Deep Search settings"): index summary correct; Pause → badge "II" → Resume; retention/limit selectors persist after reload; "What is stored" lists sites; page lookup works.
+7. **Restart/persistence**: quit Chrome fully, reopen: search still works, no re-import, settings kept, nothing paused unexpectedly.
+8. **Deep Search disabled baseline**: Settings shows "off"; `chrome://extensions` → Details → Site access shows nothing granted. Visit an article; a phrase from its body is NOT found.
+9. **Enable → real prompt**: press "Turn on Deep Search"; Chrome's permission prompt appears. **Deny**: stays off, message shown, History + Saved still work. Press again and **Allow**: status "on".
+10. **Content search**: open an article (not previously visited), wait ~10 s, search a mid-article phrase → found (labelled Deep). Check the password-page skip: open any login page; its text is not found.
+11. **Revoke through Chrome**: `chrome://extensions` → Details → Site access → remove/"On click". Reload Settings: Deep Search shows paused; browse: no new body text; History + Saved + search still fine, no errors in the service-worker console.
+12. **Re-grant**: Turn on again → prompt → works; capture resumes.
+13. **Delete Deep Search data**: Settings → "Delete all Deep Search text": body-text search stops finding the article; its history title still found; remembered page and snippet still found.
+14. **Package smoke test**: `chrome://extensions` → remove the extension → load the unzipped folder again as clean install; repeat steps 2–3 quickly. In both the service-worker DevTools and an extension page's Network tab confirm **no requests**.
+15. Overlay smoke set beyond step 4 only if time permits (`docs/qa/overlay-matrix.md`): Google Docs, a PDF, a login page, a fullscreen video. A fallback to the small window is a PASS; a page receiving the typed keys, or the page stuck inert after Esc, is a FAIL (stop and report).
+Windows/macOS shortcut check (section C) is part of step 3/4 on whichever OS you use; if the default shortcut is unassigned, the store listing still works (the toolbar icon and the user-assigned shortcut).
+
+## A. BLOCKERS BEFORE SUBMISSION (state after release-prep)
+1. **Icons**: not in the repository. Supply `public/icons/{16,32,48,128}.png` (`docs/STORE-ASSETS.md`); `npm run release:check` fails until they are valid. Nothing else is needed in code (WXT adds the manifest `icons`).
+2. **Manual QA above** (permission prompt, shortcuts, overlay smoke, package smoke test).
+3. **Privacy policy placeholders** in `docs/PRIVACY-POLICY.md`: `[PUBLISHER LEGAL NAME]`, `[CONTACT EMAIL]`, `[EFFECTIVE DATE]`, `[PUBLIC POLICY URL]` (the last one appears twice in the dashboard flow: publish the policy, then paste its URL). Publish (e.g. GitHub Pages) before filling the dashboard field.
+4. **Screenshots (≥ 1) and the 440×280 small promo tile** (`docs/STORE-ASSETS.md`).
+5. **Dashboard entries**: copy from `docs/STORE-LISTING.md`; publisher/trader declaration; support contact; visibility (recommend Unlisted first). Confirm the "Browser Recall" name is acceptable/not trademarked (store may reject on name).
 
 ## B. Manual test: optional host permission (owner, real Chrome, production zip loaded unpacked or as a draft upload)
 1. Clean profile: install the extension. The welcome page opens.

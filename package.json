@@ -22,7 +22,8 @@
     "check": "npm run typecheck && npm run lint && npm run test && npm run test:eval && npm run build && npm run test:built && npm run size",
     "test:eval": "vitest run --config vitest.eval.config.ts",
     "test:perf": "vitest run --config vitest.perf.config.ts",
-    "build:e2e": "BR_E2E=1 wxt build"
+    "build:e2e": "BR_E2E=1 wxt build",
+    "release:check": "vitest run --config vitest.release.config.ts"
   },
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "^3.53.4-build2",

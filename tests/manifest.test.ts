@@ -28,6 +28,11 @@ describe('manifest allowlist (ADR-001)', () => {
     expect(buildManifest({ e2e: true }).host_permissions).toEqual([...E2E_HOST_PERMISSIONS]);
     expect(E2E_HOST_PERMISSIONS).toEqual(['http://fixture.test/*']);
   });
+  it('declares the four production icons for the extension and the toolbar action', () => {
+    const paths = { '16': 'icons/16.png', '32': 'icons/32.png', '48': 'icons/48.png', '128': 'icons/128.png' };
+    expect(m.icons).toEqual(paths);
+    expect(m.action.default_icon).toEqual(paths);
+  });
   it('minimum Chrome version is declared', () => {
     expect(m.minimum_chrome_version).toBe('116');
   });
