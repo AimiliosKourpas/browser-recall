@@ -40,6 +40,7 @@ export const engineCallSchema = z.discriminatedUnion('method', [
   z.object({ method: z.literal('addSnippet'), params: addSnippetSchema }),
   z.object({ method: z.literal('search'), params: searchParamsSchema }),
   params('suggest', { term: z.string().max(100), limit: z.number().int().min(1).max(10).optional() }),
+  params('lastVisits', { urls: z.array(url).max(LIMITS.batch) }),
   params('deleteUrls', { urls: z.array(url).max(LIMITS.batch) }),
   params('deleteDomain', { domain: z.string().max(255), includeSaved: z.boolean().optional() }),
   params('deleteRange', { start: z.number().finite(), end: z.number().finite() }),
@@ -65,6 +66,7 @@ export interface EngineResults {
   addSnippet: { id: number; truncated: boolean } | { skipped: true };
   search: SearchResponse;
   suggest: string[];
+  lastVisits: { url: string; lastVisit: number }[];
   deleteUrls: DeleteSummary;
   deleteDomain: DeleteSummary;
   deleteRange: DeleteSummary;

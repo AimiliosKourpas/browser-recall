@@ -7,6 +7,10 @@ import { engineCallSchema, engineInfoSchema } from '../engine/contract';
 export const swMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sw/ensure-engine') }),
   z.object({ type: z.literal('sw/open-search') }),
+  /** onboarding: the user pressed "Allow and import history" (the consent version they saw) */
+  z.object({ type: z.literal('sw/grant-consent'), version: z.number().int().positive() }),
+  z.object({ type: z.literal('sw/revoke-consent') }),
+  z.object({ type: z.literal('sw/pipeline-status') }),
   /** any validated engine call (search, writes, deletes, maintenance…) */
   z.object({ type: z.literal('sw/engine'), call: engineCallSchema }),
 ]);
@@ -26,6 +30,18 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: z.infer<type
 export const ensureEngineResultSchema = resultSchema(engineInfoSchema);
 export const engineCallResultSchema = resultSchema(z.unknown());
 export const openSearchResultSchema = resultSchema(z.object({ opened: z.literal(true) }));
+export const pipelineStatusSchema = z.object({
+  consent: z.enum(['none', 'granted', 'outdated']),
+  importStatus: z.enum(['idle', 'running', 'complete']),
+  processed: z.number(),
+  skipped: z.number(),
+  windows: z.number(),
+  progress: z.number(),
+  lastReconcileAt: z.number().nullable(),
+  lastMaintenanceAt: z.number().nullable(),
+  lastIntegrity: z.object({ at: z.number(), ok: z.boolean() }).nullable(),
+});
+export const pipelineStatusResultSchema = resultSchema(pipelineStatusSchema);
 export const pingResultSchema = resultSchema(engineInfoSchema);
 
 export interface SenderLike {

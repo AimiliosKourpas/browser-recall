@@ -241,6 +241,20 @@ export class SearchStore {
 
   // ------------------------------------------------------------------ deletes
 
+  /**
+   * Stored last-visit time per URL (normalised). Used by the history layer's expiry guard (ADR-006): Chrome's own 90-day
+   * expiry fires the same onVisitRemoved event as a user deletion, and only the stored last visit tells them apart.
+   * Unknown URLs are simply absent from the result.
+   */
+  lastVisits(urls: string[]): { url: string; lastVisit: number }[] {
+    const normalized = [...new Set(urls.map((u) => normalizeUrl(u)?.url).filter((u): u is string => !!u))];
+    const out: { url: string; lastVisit: number }[] = [];
+    for (const part of chunks(normalized)) {
+      for (const r of this.db.selectArrays(`SELECT url, last_visit FROM pages WHERE url IN (${marks(part.length)})`, part)) out.push({ url: String(r[0]), lastVisit: Number(r[1]) });
+    }
+    return out;
+  }
+
   /** Mirrored deletion by exact (normalised) URL. Saved pages keep their data; only the history flag is cleared. */
   deleteUrls(urls: string[]): DeleteSummary {
     const normalized = [...new Set(urls.map((u) => normalizeUrl(u)?.url).filter((u): u is string => !!u))];

@@ -27,6 +27,8 @@ async function dispatch(call: EngineCall, ctx: HandlerContext): Promise<unknown>
       return store.search(call.params);
     case 'suggest':
       return store.suggest(call.params.term, call.params.limit);
+    case 'lastVisits':
+      return store.lastVisits(call.params.urls);
     case 'deleteUrls':
       return store.deleteUrls(call.params.urls);
     case 'deleteDomain':
