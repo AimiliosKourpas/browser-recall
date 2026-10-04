@@ -1,4 +1,6 @@
-# Handoff (after M8): NEXT SESSION = RELEASE SESSION
+# Handoff (after M8 + release-prep): NEXT SESSION = RELEASE SESSION
+
+Release-prep (`claude/release-prep`): `docs/STORE-LISTING.md`, `docs/STORE-ASSETS.md`, today's ordered QA at the top of `docs/RELEASE-CHECKLIST.md`, `npm run release:check` (icons + package hygiene gate, not in CI), privacy policy placeholders marked. Production package: `npm run build && npm run zip` → `.output/browser-recall-0.1.0-chrome.zip` (verified clean). Icons are the only code-side blocker and need owner PNGs in `public/icons/`.
 
 All planned implementation (M0–M8) is done on `claude/m8-settings-release-polish` (stacked on `claude/m7-overlay-integration`); do not start new features. Read `docs/RELEASE-CHECKLIST.md` first: it lists the five BLOCKERS (icons, manual real-Chrome tests incl. the optional-permission prompt, privacy-policy completion/URL/contact, store listing assets + name check, dashboard declarations) and the exact manual test scripts. Then `docs/milestones/M8-RESULTS.md`, `docs/PERMISSIONS.md`, `docs/PRIVACY-POLICY.md` (draft), `docs/THREAT-MODEL.md`, ADR-007/014/015.
 Commands: `npm ci` · `npm run check` · `npm run build && npm run build:e2e && xvfb-run -a npm run e2e` (29 tests, ≈4 min) · `npm run zip` (production package, `.output/browser-recall-<version>-chrome.zip`) · `CHROMIUM_PATH=<Chrome 116>` for the compat run. Size budgets: JS 175 kB, total 620 kB (now 163.5 / 575.1).
