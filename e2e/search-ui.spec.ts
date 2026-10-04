@@ -88,7 +88,10 @@ test('setup notice before consent; after consent: results, keyboard navigation, 
   await search.getByRole('combobox').fill('gizmo');
   await expect(options).toHaveCount(3);
   const fg = context.waitForEvent('page');
-  await search.keyboard.press('Enter');
+  // keydown only: the page closes itself in response, so the keyup half of press() races with the closing target (seen on the slower Chrome 116 CI runner)
+  await search.keyboard.down('Enter').catch((error: Error) => {
+    if (!/closed/i.test(error.message)) throw error;
+  });
   const fgPage = await fg;
   await fgPage.waitForLoadState();
   expect(fgPage.url()).toContain('/f/gizmo-');
