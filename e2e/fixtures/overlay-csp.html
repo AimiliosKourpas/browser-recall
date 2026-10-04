@@ -1,0 +1,5 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Overlay strict CSP</title>
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; frame-src 'none'; child-src 'none'; connect-src 'none'">
+</head><body><h1>Overlay strict CSP</h1><input id="field" aria-label="page field">
+<script>window.__keys=[];for(const t of ["keydown","keypress","keyup","input","beforeinput"])for(const o of [window,document])o.addEventListener(t,e=>window.__keys.push(t+":"+(e.key||e.data||"")),true);</script></body></html>

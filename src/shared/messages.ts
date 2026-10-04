@@ -6,7 +6,10 @@ import { engineCallSchema, engineInfoSchema } from '../engine/contract';
 /** UI page -> service worker */
 export const swMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sw/ensure-engine') }),
-  z.object({ type: z.literal('sw/open-search') }),
+  /** open the search surface (overlay on the tab when possible, else the popup window); no tabId = the window */
+  z.object({ type: z.literal('sw/open-search'), tabId: z.number().int().nonnegative().optional() }),
+  /** from the search page inside the overlay iframe: close the overlay of the sender's tab */
+  z.object({ type: z.literal('sw/overlay-close') }),
   /** onboarding: the user pressed "Allow and import history" (the consent version they saw) */
   z.object({ type: z.literal('sw/grant-consent'), version: z.number().int().positive() }),
   z.object({ type: z.literal('sw/revoke-consent') }),
@@ -39,7 +42,7 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: z.infer<type
 
 export const ensureEngineResultSchema = resultSchema(engineInfoSchema);
 export const engineCallResultSchema = resultSchema(z.unknown());
-export const openSearchResultSchema = resultSchema(z.object({ opened: z.literal(true) }));
+export const openSearchResultSchema = resultSchema(z.object({ opened: z.literal(true), surface: z.enum(['overlay', 'window']).optional() }));
 export const deepStatusSchema = z.object({ enabled: z.boolean(), permission: z.boolean(), consent: z.boolean(), excluded: z.array(z.string()) });
 export const deepStatusResultSchema = resultSchema(deepStatusSchema);
 export const pipelineStatusSchema = z.object({

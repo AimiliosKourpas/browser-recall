@@ -24,6 +24,9 @@ describe('acceptMessage (service worker gate)', () => {
   it('accepts valid messages from our pages', () => {
     expect(acceptMessage({ type: 'sw/ensure-engine' }, page, ID)).toEqual({ type: 'sw/ensure-engine' });
     expect(acceptMessage({ type: 'sw/open-search' }, page, ID)).toEqual({ type: 'sw/open-search' });
+    expect(acceptMessage({ type: 'sw/open-search', tabId: 4 }, page, ID)).toEqual({ type: 'sw/open-search', tabId: 4 });
+    expect(acceptMessage({ type: 'sw/overlay-close' }, page, ID)).toEqual({ type: 'sw/overlay-close' });
+    expect(acceptMessage({ type: 'sw/overlay-close' }, { id: ID, url: 'https://evil.example/' }, ID)).toBeUndefined();
     const search = { type: 'sw/engine', call: { method: 'search', params: { query: 'x' } } };
     expect(acceptMessage(search, page, ID)).toEqual(search);
   });

@@ -1,4 +1,7 @@
-# Handoff (after M6)
+# Handoff (after M7)
+
+**M7 done on `claude/m7-overlay-integration`** (see `docs/milestones/M7-RESULTS.md`, ADR-003 record, `docs/qa/overlay-matrix.md`): overlay + window fallback, `sw/open-search {tabId}`, `sw/overlay-close`, WAR for `search.html`. e2e overlay tests need both builds (`npm run build && npm run build:e2e`) and `xvfb-run`. JS size headroom is 3.75 kB.
+
 
 **M6 done on `claude/m6-deep-search`** (from the M5 branch; see `docs/milestones/M6-RESULTS.md`, ADR-014): Deep Search capture, `settings.html`, `clearDeepContent`, `br:state.deep`. Chain: main → m4-search-ui → m5-remember-saved → m6-deep-search; nothing merged to main. **Before publishing**: manually test the real optional-permission prompt (grant, deny, remove in `chrome://extensions`). Next: M7.
 

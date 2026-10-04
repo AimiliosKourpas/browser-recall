@@ -9,6 +9,7 @@ import { extractPage } from '../capture/extractor';
 import { rememberTab, saveSelection, type RememberDeps, type TabLike } from './remember';
 import { captureTab, MIN_TEXT_LENGTH, sha256Hex } from './deep/capture';
 import { createDeepController, DEEP_ORIGINS } from './deep/controller';
+import { closeOverlay, openSearch as openSearchSurface, type OpenSearchDeps } from './open-search';
 import { acceptMessage, routeMessage } from './router';
 
 const SEARCH_WINDOW = { type: 'popup', width: 680, height: 520 } as const;
@@ -57,9 +58,12 @@ export function registerBackground(): void {
   };
   const remember = async (tab: TabLike | undefined, selectionText: string | undefined, snippet: boolean) => (snippet ? saveSelection(tab ?? {}, selectionText, rememberDeps) : rememberTab(tab ?? {}, rememberDeps));
   const activeTab = async (): Promise<TabLike | undefined> => (await chrome.tabs.query({ active: true, lastFocusedWindow: true }))[0];
-  const openSearch = async () => {
-    await chrome.windows.create({ ...SEARCH_WINDOW, url: chrome.runtime.getURL('/search.html') });
+  const searchDeps: OpenSearchDeps = {
+    inject: async (tabId) => void (await chrome.scripting.executeScript({ target: { tabId }, files: ['overlay-host.js'] })),
+    send: (tabId, cmd) => chrome.tabs.sendMessage(tabId, { target: 'overlay', cmd }),
+    openWindow: async () => void (await chrome.windows.create({ ...SEARCH_WINDOW, url: chrome.runtime.getURL('/search.html') })),
   };
+  const openSearch = (tab?: { id?: number | undefined; url?: string | undefined }) => openSearchSurface(tab, searchDeps);
 
   chrome.runtime.onInstalled.addListener((details) => {
     // Nothing is read before consent: install/update only opens the consent page, and only when consent is missing or outdated
@@ -89,20 +93,20 @@ export function registerBackground(): void {
   chrome.history.onVisited.addListener((item) => void pipeline.onVisited(item));
   chrome.history.onVisitRemoved.addListener((removed) => void pipeline.onVisitRemoved({ allHistory: removed.allHistory, urls: removed.urls ?? [] }));
   void pipeline.onWake(); // every wake of the service worker: restore schedules, resume an unfinished import (no-op without consent)
-  chrome.action.onClicked.addListener(() => void openSearch());
-  chrome.commands.onCommand.addListener((command) => {
-    if (command === 'open-search') void openSearch();
+  chrome.action.onClicked.addListener((tab) => void openSearch(tab));
+  chrome.commands.onCommand.addListener((command, tab) => {
+    if (command === 'open-search') void (tab ? openSearch(tab) : activeTab().then(openSearch));
     else if (command === 'remember-page') void activeTab().then((tab) => remember(tab, undefined, false));
   });
   chrome.runtime.onMessage.addListener((raw: unknown, sender, sendResponse) => {
     const message = acceptMessage(raw, sender, chrome.runtime.id);
     if (!message) return false; // not ours / not trusted: never answer, never hold a channel open
-    void routeMessage(message, { ensureEngine: () => engine.ping(), engineCall: (call) => engine.call(call), pipeline, openSearch, deep,
+    void routeMessage(message, { ensureEngine: () => engine.ping(), engineCall: (call) => engine.call(call), pipeline, openSearch: (tabId) => (tabId === undefined ? openSearch() : chrome.tabs.get(tabId).then(openSearch)), closeOverlay: (tabId) => closeOverlay(tabId, searchDeps), deep,
       remember: async (tabId, snippet) => {
         const tab = tabId === undefined ? await activeTab() : await chrome.tabs.get(tabId);
         return remember(tab, undefined, snippet);
       },
-    }).then(sendResponse);
+    }, sender.tab?.id).then(sendResponse);
     return true; // async response; the SW stays alive while it is pending
   });
 }

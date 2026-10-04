@@ -7,6 +7,9 @@ export const PERMISSIONS = ['history', 'storage', 'unlimitedStorage', 'contextMe
 /** Deep Search host access is OPTIONAL and requested at runtime from a user gesture (ADR-001). */
 export const OPTIONAL_HOST_PERMISSIONS = ['https://*/*', 'http://*/*'] as const;
 
+export const OVERLAY_RESOURCES = ['search.html'] as const;
+export const OVERLAY_MATCHES = ['https://*/*', 'http://*/*'] as const;
+
 /** Locked-down CSP validated in M0 (S5): blocks every outbound request from every extension context. */
 export const EXTENSION_PAGES_CSP = [
   "default-src 'none'",
@@ -39,6 +42,8 @@ export function buildManifest(opts: { e2e?: boolean } = {}) {
     minimum_chrome_version: MINIMUM_CHROME_VERSION,
     permissions: [...PERMISSIONS],
     optional_host_permissions: [...OPTIONAL_HOST_PERMISSIONS],
+    // M7 overlay: the search page may be framed by web pages (the injected overlay host). use_dynamic_url hides the static URL from page probing (ADR-003).
+    web_accessible_resources: [{ resources: [...OVERLAY_RESOURCES], matches: [...OVERLAY_MATCHES], use_dynamic_url: true }],
     action: { default_title: '__MSG_actionTitle__' },
     commands: {
       'open-search': {
