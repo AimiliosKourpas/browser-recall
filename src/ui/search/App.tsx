@@ -166,6 +166,11 @@ export function App() {
     if (r.kind === 'page') await engineCall({ method: 'deleteUrls', params: { urls: [r.url] } });
     run(query);
   };
+  const unsave = async (r: SearchResult) => {
+    if (r.kind === 'snippet') await engineCall({ method: 'deleteSnippet', params: { id: r.id } });
+    else await engineCall({ method: 'unsavePage', params: { url: r.url } });
+    run(query);
+  };
   const copy = async (r: SearchResult) => {
     await navigator.clipboard.writeText(r.url);
     setCopied(true);
@@ -266,6 +271,11 @@ export function App() {
           <button type="button" onClick={() => void copy(current)}>
             {copied ? t('actionCopied') : t('actionCopy')}
           </button>
+          {(current.kind === 'snippet' || current.flags.saved) && (
+            <button type="button" onClick={() => void unsave(current)}>
+              {current.kind === 'snippet' ? t('actionDeleteSnippet') : t('actionUnsave')}
+            </button>
+          )}
           {current.kind === 'page' && current.flags.history && (
             <button type="button" onClick={() => void forget(current)}>
               {t('actionForget')}

@@ -23,8 +23,16 @@ export const EXTENSION_PAGES_CSP = [
 /** Chrome 116 introduced runtime.getContexts, which the offscreen manager relies on. Unverified below 141 except via the compat job (ADR-011). */
 export const MINIMUM_CHROME_VERSION = '116';
 
-export function buildManifest() {
+/**
+ * E2E-only build (BR_E2E=1 → .output-e2e): Playwright cannot click the toolbar, press browser shortcuts or accept the optional-host
+ * permission prompt, so tests need a host permission for the fixture host. The production manifest never contains it;
+ * tests/manifest.test.ts and tests/built assert that.
+ */
+export const E2E_HOST_PERMISSIONS = ['http://fixture.test/*'] as const;
+
+export function buildManifest(opts: { e2e?: boolean } = {}) {
   return {
+    ...(opts.e2e ? { host_permissions: [...E2E_HOST_PERMISSIONS] } : {}),
     name: '__MSG_extName__',
     description: '__MSG_extDescription__',
     default_locale: 'en',
@@ -36,6 +44,10 @@ export function buildManifest() {
       'open-search': {
         suggested_key: { default: 'Ctrl+Shift+Y', mac: 'Command+Shift+Y' },
         description: '__MSG_cmdOpenSearch__',
+      },
+      'remember-page': {
+        suggested_key: { default: 'Ctrl+Shift+U', mac: 'Command+Shift+U' },
+        description: '__MSG_cmdRememberPage__',
       },
     },
     content_security_policy: { extension_pages: EXTENSION_PAGES_CSP },

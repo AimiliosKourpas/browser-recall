@@ -1,4 +1,6 @@
-# Handoff (after M4)
+# Handoff (after M5)
+
+**M5 done on `claude/m5-remember-saved`** (from the M4 branch; see `docs/milestones/M5-RESULTS.md`): Remember / Save selection (context menu, `remember-page` command, `sw/remember-tab`, `sw/save-selection`), extractor v1 (`src/capture/extractor.ts`, reusable by M6), text fragments, `unsavePage`/`deleteSnippet`. **E2E needs both builds**: `npm run build && npm run build:e2e` (the e2e build adds `host_permissions: http://fixture.test/*`; use `launchExtension(dir, {e2e:true})` and `fixtureOrigin(server)`).
 
 **M4 done on `claude/m4-search-ui`** (search UI, see `docs/milestones/M4-RESULTS.md`). The M3 notes below remain valid; the search page is no longer a stub: engine-ready signal is `data-engine-state="ready"` on `<main>`.
 

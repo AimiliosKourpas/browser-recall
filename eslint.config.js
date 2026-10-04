@@ -33,7 +33,7 @@ const restrictedSyntax = [
 const guarded = ['src/**/*.{ts,tsx}', 'tests/**/*.{ts,tsx}', 'e2e/**/*.{ts,tsx}'];
 
 export default tseslint.config(
-  { ignores: ['.output/**', '.wxt/**', 'node_modules/**', 'spikes/**', 'coverage/**', 'playwright-report/**', 'test-results/**'] },
+  { ignores: ['.output/**', '.output-e2e/**', '.wxt/**', 'node_modules/**', 'spikes/**', 'coverage/**', 'playwright-report/**', 'test-results/**'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

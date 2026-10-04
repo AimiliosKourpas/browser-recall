@@ -4,13 +4,19 @@ import { join } from 'node:path';
 import { chromium, expect, type BrowserContext, type Page } from '@playwright/test';
 import type { EngineCall, EngineResults } from '../../src/engine/contract';
 import type { PipelineStatus } from '../../src/background/pipeline/controller';
-import { EXTENSION_DIR, openExtensionPage } from '../fixtures';
+import { E2E_EXTENSION_DIR, EXTENSION_DIR, openExtensionPage } from '../fixtures';
+import type { FixtureServer } from '../fixtures-server';
 
-export async function launchExtension(userDataDir: string): Promise<{ context: BrowserContext; extensionId: string }> {
+/**
+ * `e2e: true` loads the e2e build (host permission for http://fixture.test/*) and maps fixture.test to the local fixture server, so
+ * activeTab-style extraction and Deep Search capture can be exercised without the permission prompt Playwright cannot click.
+ */
+export async function launchExtension(userDataDir: string, opts: { e2e?: boolean } = {}): Promise<{ context: BrowserContext; extensionId: string }> {
+  const dir = opts.e2e ? E2E_EXTENSION_DIR : EXTENSION_DIR;
   const context = await chromium.launchPersistentContext(userDataDir, {
     ...(process.env.CHROMIUM_PATH ? { executablePath: process.env.CHROMIUM_PATH } : {}),
     headless: false,
-    args: [`--disable-extensions-except=${EXTENSION_DIR}`, `--load-extension=${EXTENSION_DIR}`, '--no-sandbox'],
+    args: [`--disable-extensions-except=${dir}`, `--load-extension=${dir}`, '--no-sandbox', ...(opts.e2e ? ['--host-resolver-rules=MAP fixture.test 127.0.0.1'] : [])],
   });
   const worker = context.serviceWorkers()[0] ?? (await context.waitForEvent('serviceworker'));
   return { context, extensionId: new URL(worker.url()).host };
@@ -42,3 +48,12 @@ export const urls = async (page: Page, query: string): Promise<string[]> => (awa
 export function seedHistory(profileDir: string, bulk: number, ancient: number): void {
   execFileSync('python3', [join(import.meta.dirname, 'seed-history.py'), profileDir, String(bulk), String(ancient)]);
 }
+
+/** The fixture server as seen from the e2e build: http://fixture.test:<port> */
+export const fixtureOrigin = (server: FixtureServer): string => server.origin.replace('127.0.0.1', 'fixture.test');
+
+export async function send<T = unknown>(page: Page, message: object): Promise<Ok<T>> {
+  return (await page.evaluate((m) => chrome.runtime.sendMessage(m), message as never)) as Ok<T>;
+}
+
+export const tabIdOf = (page: Page, url: string): Promise<number | undefined> => page.evaluate(async (u) => (await chrome.tabs.query({ url: u }))[0]?.id, url);

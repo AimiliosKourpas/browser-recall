@@ -6,6 +6,7 @@ import { isTrustedExtensionPage, swMessageSchema, type Result, type SenderLike, 
 export interface RouterDeps {
   ensureEngine: () => Promise<EngineInfo>;
   engineCall: (call: EngineCall) => Promise<unknown>;
+  remember: (tabId: number | undefined, selection: boolean) => Promise<unknown>;
   pipeline: { grantConsent(version: number): Promise<void>; revokeConsent(): Promise<void>; status(): Promise<unknown> };
   openSearch: () => Promise<void>;
 }
@@ -35,6 +36,10 @@ export async function routeMessage(message: SwMessage, deps: RouterDeps): Promis
         return { ok: true, data: await deps.pipeline.status() };
       case 'sw/pipeline-status':
         return { ok: true, data: await deps.pipeline.status() };
+      case 'sw/remember-tab':
+        return { ok: true, data: await deps.remember(message.tabId, false) };
+      case 'sw/save-selection':
+        return { ok: true, data: await deps.remember(message.tabId, true) };
       case 'sw/open-search':
         await deps.openSearch();
         return { ok: true, data: { opened: true } };

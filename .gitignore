@@ -6,3 +6,4 @@ spikes/**/.tmp/
 .wxt/
 test-results/
 playwright-report/
+.output-e2e/
