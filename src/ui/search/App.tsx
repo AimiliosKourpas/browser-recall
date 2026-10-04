@@ -287,6 +287,8 @@ export function App() {
       <footer class="footer">
         {stats ? t('footerPages', String(stats.pages)) : ''}
         {pipeline && pipeline.consent === 'granted' ? ` · ${pipeline.importStatus === 'complete' ? t('footerUpToDate') : t('footerImporting', String(Math.round(pipeline.progress * 100)))}` : ''}
+        {' · '}
+        <button type="button" class="link" onClick={() => void chrome.tabs.create({ url: chrome.runtime.getURL('/settings.html') })}>{t('footerSettings')}</button>
       </footer>
     </main>
   );

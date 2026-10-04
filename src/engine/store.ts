@@ -211,6 +211,29 @@ export class SearchStore {
     return { changed: true, removed };
   }
 
+  /**
+   * Remove Deep Search text (optionally for one site) without touching History or Saved: a page that is only in the index because of
+   * Deep capture is deleted; a page that is in history or saved keeps its row and its saved text, and loses only Deep-derived text.
+   */
+  clearDeepContent(domain?: string): { deletedPages: number; demotedPages: number } {
+    const d = domain === undefined ? undefined : fold(domain).replace(/^www\./, '');
+    const where = d === undefined ? '' : " AND (domain = ? OR domain LIKE ? ESCAPE '\\')";
+    const bind = d === undefined ? [] : [d, `%.${escapeLike(d)}`];
+    const rows = this.db.selectArrays(`SELECT id, flags FROM pages WHERE (flags & ${PAGE_FLAGS.content}) != 0 AND (flags & ${PAGE_FLAGS.saved}) = 0${where}`, bind);
+    const doomed = rows.filter((r) => !(Number(r[1]) & PAGE_FLAGS.history)).map((r) => Number(r[0]));
+    const demoted = rows.filter((r) => Number(r[1]) & PAGE_FLAGS.history).map((r) => Number(r[0]));
+    let deleted = 0;
+    this.db.transaction(() => {
+      for (const part of chunks(doomed)) deleted += this.removePages(part);
+      for (const part of chunks(demoted)) {
+        this.run({ sql: `DELETE FROM contents WHERE page_id IN (${marks(part.length)})`, bind: part });
+        this.run({ sql: `UPDATE pages SET flags = flags & ${~PAGE_FLAGS.content & 7}, content_hash = NULL, content_indexed_at = NULL WHERE id IN (${marks(part.length)})`, bind: part });
+        for (const id of part) this.reindex(id);
+      }
+    });
+    return { deletedPages: deleted, demotedPages: demoted.length };
+  }
+
   deleteSnippet(id: number): { deleted: boolean } {
     const exists = this.first('SELECT 1 FROM snippets WHERE id = ?', [id]);
     if (!exists) return { deleted: false };

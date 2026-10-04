@@ -80,7 +80,7 @@ test('setup notice before consent; after consent: results, keyboard navigation, 
   await expect(options).toHaveCount(2);
   await search.getByRole('combobox').fill('zzzzqqqq');
   await expect(search.getByText('No matches.')).toBeVisible();
-  await expect(search.getByText(/Deep Search/)).toBeVisible();
+  await expect(search.getByText(/turn on Deep Search/)).toBeVisible();
   await search.getByRole('combobox').fill('');
   await expect(search.getByText(/Type what you remember/)).toBeVisible();
 
