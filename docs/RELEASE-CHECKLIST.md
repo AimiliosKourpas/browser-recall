@@ -24,7 +24,7 @@ Windows/macOS shortcut check (section C) is part of step 3/4 on whichever OS you
 ## A. BLOCKERS BEFORE SUBMISSION (state after release-prep)
 1. **Icons**: not in the repository. Supply `public/icons/{16,32,48,128}.png` (`docs/STORE-ASSETS.md`); `npm run release:check` fails until they are valid. Nothing else is needed in code (WXT adds the manifest `icons`).
 2. **Manual QA above** (permission prompt, shortcuts, overlay smoke, package smoke test).
-3. **Privacy policy placeholders** in `docs/PRIVACY-POLICY.md`: `[PUBLISHER LEGAL NAME]`, `[CONTACT EMAIL]`, `[EFFECTIVE DATE]`, `[PUBLIC POLICY URL]` (the last one appears twice in the dashboard flow: publish the policy, then paste its URL). Publish (e.g. GitHub Pages) before filling the dashboard field.
+3. ~~Privacy policy placeholders~~ **DONE**: publisher, contact and effective date are filled, and the policy is public at https://aimilioskourpas.github.io/browser-recall/PRIVACY-POLICY (GitHub Pages, `main` `/docs`). Paste that exact URL into the dashboard's privacy policy field; re-check that it still loads before submitting.
 4. **Screenshots (≥ 1) and the 440×280 small promo tile** (`docs/STORE-ASSETS.md`).
 5. **Dashboard entries**: copy from `docs/STORE-LISTING.md`; publisher/trader declaration; support contact; visibility (recommend Unlisted first). Confirm the "Browser Recall" name is acceptable/not trademarked (store may reject on name).
 

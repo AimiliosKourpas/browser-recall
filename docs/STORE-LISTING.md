@@ -59,7 +59,8 @@ Certifications (all true): data is not sold or transferred to third parties outs
 Note for the owner: Google's form asks about data "collected"; answer it as above (the data is handled by the extension although it never leaves the device) and rely on the policy to explain "local only".
 
 ## Privacy policy URL
-Public URL of `docs/PRIVACY-POLICY.md` once the placeholders are filled (see `docs/RELEASE-CHECKLIST.md`).
+https://aimilioskourpas.github.io/browser-recall/PRIVACY-POLICY
+(GitHub Pages, published from `main` `/docs`; source `docs/PRIVACY-POLICY.md`. Paste this exact URL into the dashboard's privacy policy field.)
 
 ## Reviewer instructions (test instructions field)
 1. Install the extension. A welcome page opens. Click "Allow and import history". Nothing is read before that. The import finishes in seconds on a small profile.
