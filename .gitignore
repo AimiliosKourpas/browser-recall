@@ -3,6 +3,7 @@ spikes/**/dist/
 spikes/**/.tmp/
 *.log.tmp
 .output/
+.output-e2e/
 .wxt/
 test-results/
 playwright-report/

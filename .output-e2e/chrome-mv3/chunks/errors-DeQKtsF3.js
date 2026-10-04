@@ -1,1 +1,0 @@
-class s extends Error{name="EngineInterruptedError"}class r extends Error{name="EngineTimeoutError"}function t(e){if(e instanceof s)return!0;const n=e instanceof Error?e.message:String(e);return/Receiving end does not exist|message channel closed|message port closed|Could not establish connection/i.test(n)}export{s as E,r as a,t as i};
