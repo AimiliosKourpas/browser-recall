@@ -10,7 +10,8 @@ export const OPTIONAL_HOST_PERMISSIONS = ['https://*/*', 'http://*/*'] as const;
 /** Approved production artwork (public/icons, copied verbatim to the package root). */
 export const ICONS = { '16': 'icons/16.png', '32': 'icons/32.png', '48': 'icons/48.png', '128': 'icons/128.png' } as const;
 
-export const OVERLAY_RESOURCES = ['search.html'] as const;
+/** The ONLY web-accessible page: the overlay frame. The popup/tab search page (search.html) is deliberately NOT web-accessible: Chrome 153 blocks top-level navigations to dynamic-URL resources. */
+export const OVERLAY_RESOURCES = ['overlay.html'] as const;
 export const OVERLAY_MATCHES = ['https://*/*', 'http://*/*'] as const;
 
 /** Locked-down CSP validated in M0 (S5): blocks every outbound request from every extension context. */

@@ -8,7 +8,7 @@ import { expect, openExtensionPage, test } from './fixtures';
 import { startFixtureServer } from './fixtures-server';
 import { engine, fixtureOrigin, launchExtension, send, status, tabIdOf, toolPage } from './support/pipeline';
 
-const overlayFrame = (page: Page): Frame | undefined => page.frames().find((f) => f.url().includes('/search.html'));
+const overlayFrame = (page: Page): Frame | undefined => page.frames().find((f) => f.url().includes('/overlay.html'));
 const keys = (page: Page) => page.evaluate(() => (window as unknown as { __keys: string[] }).__keys.length);
 const surface = async (tool: Page, tabId: number | undefined) => ((await send<{ surface: string }>(tool, { type: 'sw/open-search', tabId })) as { ok: true; data: { surface: string } }).data.surface;
 const hostCount = (page: Page) => page.evaluate(() => document.querySelectorAll('[popover]').length);
