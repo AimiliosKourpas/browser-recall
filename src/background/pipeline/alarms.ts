@@ -4,6 +4,8 @@
 export const ALARM_RECONCILE = 'br-reconcile';
 export const ALARM_MAINTENANCE = 'br-maintenance';
 export const ALARM_IMPORT_WATCHDOG = 'br-import-watchdog';
+/** one-shot: fires shortly after a live visit that arrived without a title, to pick the title up from Chrome history */
+export const ALARM_TITLE_REFRESH = 'br-title-refresh';
 
 export interface AlarmLike {
   name: string;
@@ -12,7 +14,7 @@ export interface AlarmLike {
 
 export interface AlarmsApi {
   get(name: string): Promise<AlarmLike | undefined>;
-  create(name: string, info: { delayInMinutes?: number; periodInMinutes: number }): Promise<void>;
+  create(name: string, info: { delayInMinutes?: number; periodInMinutes?: number }): Promise<void>;
   clear(name: string): Promise<boolean>;
 }
 

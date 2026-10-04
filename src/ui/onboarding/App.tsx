@@ -30,15 +30,44 @@ export function App() {
       () => setView({ kind: 'error' }),
     );
 
+  const [shortcut, setShortcut] = useState('');
+  useEffect(() => void chrome.commands.getAll().then((cs) => setShortcut(cs.find((c) => c.name === 'open-search')?.shortcut ?? ''), () => undefined), []);
+
+  const howTo = (
+    <section aria-labelledby="h-how">
+      <h2 id="h-how">{t('onboardingHowTitle')}</h2>
+      <p>{shortcut ? t('onboardingHowSearch', shortcut) : t('onboardingHowSearchUnset')}</p>
+      <p>{t('onboardingHowRemember')}</p>
+      <p class="actions">
+        <button type="button" onClick={() => void chrome.tabs.create({ url: 'chrome://extensions/shortcuts' })}>{t('onboardingShortcutsLink')}</button>
+      </p>
+    </section>
+  );
+
   return (
     <main>
       <h1>{t('onboardingPageTitle')}</h1>
       {view.kind === 'error' && <p role="alert">{t('onboardingError')}</p>}
       {view.kind === 'declined' && <p role="status">{t('onboardingDeclined')}</p>}
       {view.kind === 'ready' && view.status.consent !== 'granted' && (
-        <section>
-          <p>{t('onboardingConsentIntro')}</p>
-          <p class="status">{t('onboardingConsentHeadsUp')}</p>
+        <>
+          <section aria-labelledby="h-what">
+            <h2 id="h-what">{t('actionTitle')}</h2>
+            <p>{t('onboardingConsentIntro')}</p>
+          </section>
+          <section aria-labelledby="h-local">
+            <h2 id="h-local">{t('onboardingLocalTitle')}</h2>
+            <p>{t('onboardingLocal')}</p>
+          </section>
+          <section aria-labelledby="h-history">
+            <h2 id="h-history">{t('onboardingConsentTitle')}</h2>
+            <p>{t('onboardingWhyHistory')}</p>
+          </section>
+          <section aria-labelledby="h-deep">
+            <h2 id="h-deep">{t('onboardingDeepTitle')}</h2>
+            <p>{t('onboardingDeep')}</p>
+          </section>
+          {howTo}
           <p class="actions">
             <button type="button" class="primary" onClick={() => void allow()}>
               {t('onboardingAllow')}
@@ -47,16 +76,27 @@ export function App() {
               {t('onboardingDecline')}
             </button>
           </p>
-        </section>
+        </>
       )}
       {view.kind === 'ready' && view.status.consent === 'granted' && (
-        <section role="status" data-import-status={view.status.importStatus}>
-          <p>{view.status.importStatus === 'complete' ? t('onboardingDone') : t('onboardingImporting')}</p>
-          <p>
-            {t('onboardingImportedCount')} <strong>{view.status.processed}</strong>
-          </p>
-          {view.status.importStatus !== 'complete' && <progress max={1} value={view.status.progress} aria-label={t('onboardingImporting')} />}
-        </section>
+        <>
+          <section role="status" data-import-status={view.status.importStatus}>
+            <p>{view.status.importStatus === 'complete' ? t('onboardingDone') : t('onboardingImporting')}</p>
+            <p>
+              {t('onboardingImportedCount')} <strong>{view.status.processed}</strong>
+            </p>
+            {view.status.importStatus !== 'complete' && <progress max={1} value={view.status.progress} aria-label={t('onboardingImporting')} />}
+          </section>
+          {howTo}
+          <section aria-labelledby="h-deep">
+            <h2 id="h-deep">{t('onboardingDeepTitle')}</h2>
+            <p>{t('onboardingDeep')}</p>
+            <p class="actions">
+              <button type="button" onClick={() => void chrome.tabs.create({ url: chrome.runtime.getURL('/settings.html') })}>{t('onboardingOpenSettings')}</button>{' '}
+              <button type="button" onClick={() => void chrome.runtime.sendMessage({ type: 'sw/open-search' })}>{t('settingsOpenSearch')}</button>
+            </p>
+          </section>
+        </>
       )}
     </main>
   );

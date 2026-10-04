@@ -1,5 +1,6 @@
 // Message routing for the service worker. Pure (dependencies injected) so it is unit-tested without Chrome.
 import type { EngineCall, EngineInfo } from '../engine/contract';
+import type { Settings, SettingsPatch } from './pipeline/state';
 import type { DeepController } from './deep/controller';
 import { EngineError } from '../engine/errors';
 import { isTrustedExtensionPage, swMessageSchema, type Result, type SenderLike, type SwMessage } from '../shared/messages';
@@ -8,7 +9,7 @@ export interface RouterDeps {
   ensureEngine: () => Promise<EngineInfo>;
   engineCall: (call: EngineCall) => Promise<unknown>;
   remember: (tabId: number | undefined, selection: boolean) => Promise<unknown>;
-  pipeline: { grantConsent(version: number): Promise<void>; revokeConsent(): Promise<void>; status(): Promise<unknown> };
+  pipeline: { grantConsent(version: number): Promise<void>; revokeConsent(): Promise<void>; status(): Promise<unknown>; settings(): Promise<Settings>; updateSettings(patch: SettingsPatch): Promise<Settings> };
   openSearch: (tabId: number | undefined) => Promise<'overlay' | 'window'>;
   closeOverlay: (tabId: number | undefined) => Promise<void>;
   deep: Pick<DeepController, 'status' | 'enable' | 'disable' | 'exclude' | 'include' | 'clear'>;
@@ -55,6 +56,10 @@ export async function routeMessage(message: SwMessage, deps: RouterDeps, senderT
         return { ok: true, data: await deps.deep.include(message.domain) };
       case 'sw/deep-clear':
         return { ok: true, data: await deps.deep.clear() };
+      case 'sw/settings-get':
+        return { ok: true, data: await deps.pipeline.settings() };
+      case 'sw/settings-set':
+        return { ok: true, data: await deps.pipeline.updateSettings(message.patch) };
       case 'sw/open-search':
         return { ok: true, data: { opened: true, surface: await deps.openSearch(message.tabId) } };
       case 'sw/overlay-close':

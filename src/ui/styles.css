@@ -106,3 +106,19 @@ mark { background: color-mix(in srgb, #f5c542 55%, transparent); color: inherit;
 .actions { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
 .footer { margin-top: 0.8rem; font-size: 0.8rem; border-top: 1px solid var(--border); padding-top: 0.4rem; }
 .footer .link { border: 0; padding: 0; background: none; color: var(--accent); text-decoration: underline; font-size: inherit; }
+main.settings { max-width: 52rem; }
+main.settings section { margin: 1.5rem 0; padding-top: 0.5rem; border-top: 1px solid var(--border); }
+main.settings h2 { font-size: 1.15rem; margin: 0 0 0.5rem; }
+main.settings h3 { font-size: 1rem; margin: 1rem 0 0.25rem; }
+main.settings input[type='text'], main.settings input[type='url'], main.settings input[type='date'], main.settings select { font: inherit; padding: 0.3rem 0.5rem; border: 1px solid var(--border); border-radius: 0.4rem; background: var(--bg); color: var(--fg); max-width: 100%; }
+main.settings label { display: block; margin: 0.75rem 0 0.2rem; }
+main.settings label.inline { display: inline; margin: 0; }
+main.settings table { width: 100%; border-collapse: collapse; margin: 0.5rem 0 1rem; font-size: 0.9rem; }
+main.settings th, main.settings td { text-align: left; padding: 0.3rem 0.4rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+main.settings .row-actions button { font-size: 0.8rem; }
+main.settings blockquote { margin: 0.25rem 0; padding-left: 0.75rem; border-left: 3px solid var(--border); color: var(--muted); overflow-wrap: anywhere; }
+main.settings textarea { width: 100%; font: inherit; }
+main.settings meter { width: 100%; }
+button.danger { border-color: #b42318; color: #b42318; }
+button:disabled { opacity: 0.55; cursor: not-allowed; }
+@media (prefers-color-scheme: dark) { button.danger { border-color: #ff8a80; color: #ff8a80; } }

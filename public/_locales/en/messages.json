@@ -24,12 +24,8 @@
     "description": "Onboarding page <title> and heading"
   },
   "onboardingConsentIntro": {
-    "message": "To make your history searchable, Browser Recall reads your Chrome browsing history (page titles, addresses and visit times) and stores a private copy on this device. It never sends it anywhere.",
+    "message": "Browser Recall makes your own browsing searchable: find a page by what you remember about it, not only by its title. To do that it reads your Chrome history (page titles, addresses and visit times) once, then keeps its copy up to date.",
     "description": "Consent screen: what is read and where it goes (PRODUCT_SPEC §5.1)"
-  },
-  "onboardingConsentHeadsUp": {
-    "message": "Chrome's install prompt says the extension can \"change\" your history. That wording covers delete features; Browser Recall only removes its own copy when you delete history in Chrome or ask it to.",
-    "description": "Consent screen: explains the Chrome permission wording"
   },
   "onboardingAllow": {
     "message": "Allow and import history",
@@ -216,15 +212,15 @@
     "description": "Row action for snippets"
   },
   "settingsPageTitle": {
-    "message": "Deep Search",
-    "description": "Settings page title"
+    "message": "Browser Recall settings",
+    "description": "Settings page title and h1"
   },
   "settingsDeepIntro": {
-    "message": "Deep Search lets Browser Recall also index the text of pages you open, so you can find a page by what it says, not only by its title and address. It is off by default. The text is stored only on this device and is never sent anywhere.",
+    "message": "Deep Search lets Browser Recall also index the text of pages you open, so you can find a page by what it says. It is off by default and separate from history access. The text is stored only on this device.",
     "description": "Deep Search intro"
   },
   "settingsDeepPermission": {
-    "message": "Turning it on asks Chrome for access to the websites you visit, so the text of a page can be read after it loads. You can turn it off, or remove that access, at any time; History and Saved keep working either way.",
+    "message": "Turning it on asks Chrome for permission to read the websites you visit (all http and https sites), so the text of a page can be read after it loads. You can turn it off, or remove that access in chrome://extensions, at any time; history search and remembered items keep working either way.",
     "description": "Deep Search permission explanation"
   },
   "settingsDeepSkips": {
@@ -298,5 +294,377 @@
   "footerSettings": {
     "message": "Deep Search settings",
     "description": "Footer link to the settings page"
+  },
+  "onboardingLocalTitle": {
+    "message": "Everything stays on this device",
+    "description": "Settings / onboarding text"
+  },
+  "onboardingLocal": {
+    "message": "The index lives in this browser profile. There is no account, no server, no analytics and no remote AI, and the extension's own code makes no network requests. Browser Recall does not encrypt the index: anyone who can use your computer account or this browser profile can read it.",
+    "description": "Settings / onboarding text"
+  },
+  "onboardingWhyHistory": {
+    "message": "Why the History permission: it is the only way to read titles, addresses and visit times, and to learn when you delete history so the copy can be deleted too. Chrome words this permission as being able to \"change\" history; Browser Recall only removes its own copy.",
+    "description": "Settings / onboarding text"
+  },
+  "onboardingDeepTitle": {
+    "message": "Deep Search is separate and optional",
+    "description": "Settings / onboarding text"
+  },
+  "onboardingDeep": {
+    "message": "By default only titles and addresses are searched. Deep Search can also index the text of pages you open, but it needs extra access to websites that you grant later, in Settings, with Chrome's own prompt. You can leave it off and everything else keeps working.",
+    "description": "Settings / onboarding text"
+  },
+  "onboardingHowTitle": {
+    "message": "How to use it",
+    "description": "Settings / onboarding text"
+  },
+  "onboardingHowSearch": {
+    "message": "Search: press $1 or click the toolbar icon. If no shortcut is set, assign one on Chrome's shortcuts page.",
+    "description": "Settings / onboarding text"
+  },
+  "onboardingHowSearchUnset": {
+    "message": "Search: click the toolbar icon, or assign a shortcut on Chrome's shortcuts page.",
+    "description": "Settings / onboarding text"
+  },
+  "onboardingHowRemember": {
+    "message": "Remember: right-click a page and choose \"Remember this page\" to keep it permanently, or select text and choose \"Save selection to memory\". Remembered items are never expired or removed by history deletion.",
+    "description": "Settings / onboarding text"
+  },
+  "onboardingOpenSettings": {
+    "message": "Open settings",
+    "description": "Settings / onboarding text"
+  },
+  "onboardingShortcutsLink": {
+    "message": "Chrome shortcuts page",
+    "description": "Settings / onboarding text"
+  },
+  "settingsSectionIndex": {
+    "message": "Index",
+    "description": "Settings / onboarding text"
+  },
+  "settingsIndexSummary": {
+    "message": "$1 pages: $2 from history, $3 with page text, $4 remembered, $5 snippets.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsIndexUsage": {
+    "message": "Stored text $1 MB, database $2 MB of the $3 MB limit.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsIndexStatusImporting": {
+    "message": "Importing history: $1%.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsIndexStatusIdle": {
+    "message": "History is up to date.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsIndexNoConsent": {
+    "message": "History access has not been allowed yet. Nothing is indexed.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsSectionIndexing": {
+    "message": "Indexing and deletion",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPause": {
+    "message": "Pause indexing",
+    "description": "Settings / onboarding text"
+  },
+  "settingsResume": {
+    "message": "Resume indexing",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPausedNote": {
+    "message": "Indexing is paused: new history and Deep Search pages are not added. Resuming catches up on history from the paused period.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsRunningNote": {
+    "message": "Indexing is on.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsMirror": {
+    "message": "Delete my copy when I delete history in Chrome",
+    "description": "Settings / onboarding text"
+  },
+  "settingsMirrorHelp": {
+    "message": "Remembered pages and snippets are always kept. Chrome's own automatic expiry of old history never deletes your copy.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsRetention": {
+    "message": "Keep history and Deep Search text for",
+    "description": "Settings / onboarding text"
+  },
+  "settingsRetentionForever": {
+    "message": "Until I delete it",
+    "description": "Settings / onboarding text"
+  },
+  "settingsRetentionMonths": {
+    "message": "$1 months",
+    "description": "Settings / onboarding text"
+  },
+  "settingsRetentionHelp": {
+    "message": "Applied during the daily cleanup. Remembered items never expire.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsCap": {
+    "message": "Storage limit",
+    "description": "Settings / onboarding text"
+  },
+  "settingsCapMb": {
+    "message": "$1 MB",
+    "description": "Settings / onboarding text"
+  },
+  "settingsCapHelp": {
+    "message": "When the limit is reached, the oldest Deep Search text is removed first, then the oldest pages. Applied during the daily cleanup.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsSectionLedger": {
+    "message": "What is stored",
+    "description": "Settings / onboarding text"
+  },
+  "settingsLedgerIntro": {
+    "message": "Per site: how many pages are stored, how much page text, and when it last changed. Excluding a site stops Deep Search capture there and deletes its Deep Search text; deleting a site removes it from the index (remembered pages too).",
+    "description": "Settings / onboarding text"
+  },
+  "settingsLedgerSite": {
+    "message": "Site",
+    "description": "Settings / onboarding text"
+  },
+  "settingsLedgerPages": {
+    "message": "Pages",
+    "description": "Settings / onboarding text"
+  },
+  "settingsLedgerText": {
+    "message": "Text",
+    "description": "Settings / onboarding text"
+  },
+  "settingsLedgerLast": {
+    "message": "Last activity",
+    "description": "Settings / onboarding text"
+  },
+  "settingsLedgerActions": {
+    "message": "Actions",
+    "description": "Settings / onboarding text"
+  },
+  "settingsLedgerEmpty": {
+    "message": "Nothing is stored yet.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsLedgerExclude": {
+    "message": "Exclude from Deep Search",
+    "description": "Settings / onboarding text"
+  },
+  "settingsLedgerDelete": {
+    "message": "Delete site",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPageLookup": {
+    "message": "Show what is stored for a page address",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPageLookupButton": {
+    "message": "Show",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPageNone": {
+    "message": "Nothing is stored for that address.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPageSources": {
+    "message": "Stored from: $1",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPageHistory": {
+    "message": "history",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPageContent": {
+    "message": "page text",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPageSavedFlag": {
+    "message": "remembered",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPageDetails": {
+    "message": "Visits: $1. Last visit: $2. Stored text: $3 characters. Snippets: $4.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPagePreview": {
+    "message": "Beginning of the stored text:",
+    "description": "Settings / onboarding text"
+  },
+  "settingsSectionDelete": {
+    "message": "Delete data",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteIntro": {
+    "message": "These actions remove data from this device only and cannot be undone.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeletePage": {
+    "message": "Delete one page (address)",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteSite": {
+    "message": "Delete a site (domain)",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteSiteSaved": {
+    "message": "Also delete remembered pages and snippets of that site",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteRangeFrom": {
+    "message": "From (date)",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteRangeTo": {
+    "message": "To (date, included)",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteRange": {
+    "message": "Delete history and Deep Search data in this date range (remembered items are kept)",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteKeepSaved": {
+    "message": "Delete all history and Deep Search data, keep remembered items",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteEverything": {
+    "message": "Delete everything, including remembered pages and snippets",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteConfirmType": {
+    "message": "Type DELETE to confirm",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteButton": {
+    "message": "Delete",
+    "description": "Settings / onboarding text"
+  },
+  "settingsConfirm": {
+    "message": "Confirm: $1",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleted": {
+    "message": "Deleted $1 pages. Remembered pages kept: $2.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsDeleteError": {
+    "message": "Could not delete. Nothing was changed.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsSectionExport": {
+    "message": "Export and import",
+    "description": "Settings / onboarding text"
+  },
+  "settingsExportIntro": {
+    "message": "Exports are local files: nothing is uploaded. Chrome removes Browser Recall's data when the extension is uninstalled, so export first if you want to keep it.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsExportSaved": {
+    "message": "Export remembered pages and snippets",
+    "description": "Settings / onboarding text"
+  },
+  "settingsExportAll": {
+    "message": "Export everything",
+    "description": "Settings / onboarding text"
+  },
+  "settingsImport": {
+    "message": "Import an export file",
+    "description": "Settings / onboarding text"
+  },
+  "settingsImported": {
+    "message": "Imported $1 pages and $2 snippets. Skipped: $3.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsImportBad": {
+    "message": "That file is not a valid Browser Recall export. Nothing was imported.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsImportTooBig": {
+    "message": "That file is too large to import (limit 50 MB).",
+    "description": "Settings / onboarding text"
+  },
+  "settingsSectionShortcuts": {
+    "message": "Shortcuts",
+    "description": "Settings / onboarding text"
+  },
+  "settingsShortcutNotSet": {
+    "message": "not set",
+    "description": "Settings / onboarding text"
+  },
+  "settingsShortcutsHelp": {
+    "message": "If a shortcut is not set or does not work, another extension may own it. Chrome lets you assign it yourself.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsShortcutsOpen": {
+    "message": "Open Chrome shortcut settings",
+    "description": "Settings / onboarding text"
+  },
+  "settingsSectionAbout": {
+    "message": "About and privacy",
+    "description": "Settings / onboarding text"
+  },
+  "settingsAboutVersion": {
+    "message": "Version $1",
+    "description": "Settings / onboarding text"
+  },
+  "settingsAboutStores": {
+    "message": "Stored on this device only: titles, addresses and visit times from Chrome history; if you turn Deep Search on, the text of pages you open (up to 50 KB each); pages and text you choose to remember; settings.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsAboutNever": {
+    "message": "Never stored or sent: passwords, form contents, cookies, page images. Browser Recall has no account, backend, analytics or remote AI, and its code makes no network requests.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsAboutLimits": {
+    "message": "Not encrypted by Browser Recall: other people with access to your computer account or browser profile could read the index. Deep Search skips private windows, pages with password or payment fields, local and intranet addresses, and sites you exclude.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsAboutDiag": {
+    "message": "Copy diagnostics",
+    "description": "Settings / onboarding text"
+  },
+  "settingsAboutDiagHelp": {
+    "message": "Copies counts and settings only (no addresses, titles or text) for you to paste into a bug report. Nothing is sent automatically.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsAboutDiagCopied": {
+    "message": "Copied.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsAboutDiagManual": {
+    "message": "Copy this text:",
+    "description": "Settings / onboarding text"
+  },
+  "settingsOpenSearch": {
+    "message": "Open search",
+    "description": "Settings / onboarding text"
+  },
+  "settingsLoading": {
+    "message": "Loading…",
+    "description": "Settings / onboarding text"
+  },
+  "settingsError": {
+    "message": "Settings could not be loaded. Reload this page.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsSaveError": {
+    "message": "That change could not be saved.",
+    "description": "Settings / onboarding text"
+  },
+  "settingsPageTitleDeep": {
+    "message": "Deep Search",
+    "description": "Deep Search section heading"
+  },
+  "settingsOpenOnboarding": {
+    "message": "Set up Browser Recall",
+    "description": "Link to onboarding"
+  },
+  "onboardingConsentTitle": {
+    "message": "Why Browser Recall asks for your history",
+    "description": "Onboarding heading"
   }
 }

@@ -13,6 +13,8 @@ export const LIMITS = {
   /** Saved snippet quote cap (PRODUCT_SPEC §5.4, [TUNE] in M5). */
   snippet: 5_000,
   batch: 5_000,
+  /** Ledger preview of stored text (characters) */
+  preview: 600,
 } as const;
 
 const ms = z.number().finite().nonnegative();
@@ -145,6 +147,34 @@ export interface DeleteSummary {
   deletedPages: number;
   /** saved pages that were kept (only their history flag was cleared) */
   keptSaved: number;
+}
+
+/** Ledger (M8): one row per site; sizes are the stored original text. */
+export interface DomainStat {
+  domain: string;
+  pages: number;
+  saved: number;
+  withContent: number;
+  textBytes: number;
+  lastActivity: number;
+}
+
+/** Ledger (M8): exactly what is stored for one page. `bodyPreview` is the first characters of the stored text, never more. */
+export interface PageInfo {
+  url: string;
+  title: string;
+  domain: string;
+  flags: { history: boolean; content: boolean; saved: boolean };
+  firstSeen: number;
+  lastVisit: number;
+  visitCount: number;
+  savedAt: number | null;
+  contentIndexedAt: number | null;
+  textBytes: number;
+  headings: string;
+  description: string;
+  bodyPreview: string;
+  snippets: number;
 }
 
 export interface Stats {

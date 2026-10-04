@@ -6,6 +6,8 @@ import {
   LIMITS,
   type AddSnippetInput,
   type CapSummary,
+  type DomainStat,
+  type PageInfo,
   type ContentInput,
   type DeleteSummary,
   type ExportData,
@@ -656,6 +658,48 @@ export class SearchStore {
   }
 
   // ------------------------------------------------------------------ maintenance, health, size
+
+  /** Ledger: per-site totals, biggest text first (a bounded GROUP BY over the pages table). */
+  domainStats(limit: number): DomainStat[] {
+    return this.db
+      .selectArrays(
+        `SELECT p.domain, count(*), sum((p.flags & ${PAGE_FLAGS.saved}) != 0), sum((p.flags & ${PAGE_FLAGS.content}) != 0), coalesce(sum(c.bytes), 0), max(p.last_visit, coalesce(p.content_indexed_at, 0))
+         FROM pages p LEFT JOIN contents c ON c.page_id = p.id GROUP BY p.domain ORDER BY coalesce(sum(c.bytes), 0) DESC, count(*) DESC, p.domain LIMIT ?`,
+        [limit],
+      )
+      .map((r) => ({ domain: String(r[0]), pages: Number(r[1]), saved: Number(r[2]), withContent: Number(r[3]), textBytes: Number(r[4]), lastActivity: Number(r[5]) }));
+  }
+
+  /** Ledger: what is stored for one page (null when nothing is). */
+  pageInfo(url: string): PageInfo | null {
+    const norm = normalizeUrl(url);
+    const row = norm
+      ? this.first(
+          `SELECT p.id, p.url, p.title, p.domain, p.flags, p.first_seen, p.last_visit, p.visit_count, p.saved_at, p.content_indexed_at,
+                  coalesce(c.bytes, 0), coalesce(c.headings, ''), coalesce(c.description, ''), substr(coalesce(c.body, ''), 1, ${LIMITS.preview})
+           FROM pages p LEFT JOIN contents c ON c.page_id = p.id WHERE p.url = ?`,
+          [norm.url],
+        )
+      : undefined;
+    if (!row || !norm) return null;
+    const flags = Number(row[4]);
+    return {
+      url: String(row[1]),
+      title: String(row[2]),
+      domain: String(row[3]),
+      flags: { history: !!(flags & PAGE_FLAGS.history), content: !!(flags & PAGE_FLAGS.content), saved: !!(flags & PAGE_FLAGS.saved) },
+      firstSeen: Number(row[5]),
+      lastVisit: Number(row[6]),
+      visitCount: Number(row[7]),
+      savedAt: row[8] === null ? null : Number(row[8]),
+      contentIndexedAt: row[9] === null ? null : Number(row[9]),
+      textBytes: Number(row[10]),
+      headings: String(row[11]),
+      description: String(row[12]),
+      bodyPreview: String(row[13]),
+      snippets: Number(this.db.selectValue('SELECT count(*) FROM snippets WHERE url = ?', [norm.url]) ?? 0),
+    };
+  }
 
   stats(): Stats {
     const n = (sql: string) => Number(this.db.selectValue(sql) ?? 0);

@@ -3,11 +3,13 @@
 // the top level. Nothing here runs before consent, and nothing depends on the onboarding page staying open.
 import type { EngineCall, EngineResults } from '../../engine/contract';
 import type { HistoryRow } from '../../engine/model';
-import { type AlarmsApi, ALARM_IMPORT_WATCHDOG, ALARM_MAINTENANCE, ALARM_RECONCILE, ensureAlarms } from './alarms';
+import { type AlarmsApi, ALARM_IMPORT_WATCHDOG, ALARM_MAINTENANCE, ALARM_RECONCILE, ALARM_TITLE_REFRESH, ensureAlarms } from './alarms';
 import { planRemoval, type Removal } from './deletion';
-import { type HistoryItemLike, type HistorySearch, type ImportDeps, isHttpUrl, runInitialImport, runReconcile, toRow } from './history-import';
+import { type HistoryItemLike, type HistorySearch, type ImportDeps, importRange, isHttpUrl, runInitialImport, runReconcile, toRow } from './history-import';
 import { runMaintenance } from './maintenance';
-import { CONSENT_VERSION, type PipelineState, type StateStore, hasValidConsent } from './state';
+import { CONSENT_VERSION, type PipelineState, type Settings, type SettingsPatch, type StateStore, hasValidConsent } from './state';
+
+const TITLE_REFRESH_WINDOW_MS = 20 * 60_000;
 
 export interface PipelineDeps {
   history: HistorySearch;
@@ -28,6 +30,7 @@ export interface PipelineStatus {
   lastReconcileAt: number | null;
   lastMaintenanceAt: number | null;
   lastIntegrity: { at: number; ok: boolean } | null;
+  paused: boolean;
 }
 
 export function toStatus(s: PipelineState, now: number): PipelineStatus {
@@ -44,6 +47,7 @@ export function toStatus(s: PipelineState, now: number): PipelineStatus {
     lastReconcileAt: s.lastReconcileAt,
     lastMaintenanceAt: s.lastMaintenanceAt,
     lastIntegrity: s.lastIntegrity,
+    paused: s.settings.paused,
   };
 }
 
@@ -79,6 +83,7 @@ export function createPipeline(deps: PipelineDeps) {
       const s = await deps.state.read();
       if (!hasValidConsent(s)) return;
       await syncAlarms();
+      if (s.settings.paused) return; // paused: nothing runs until the user resumes
       if (s.import.status !== 'complete') void resumeImport();
       else if (s.reconcileDue) void runReconcile(importDeps()).catch(() => undefined);
     },
@@ -106,11 +111,15 @@ export function createPipeline(deps: PipelineDeps) {
 
     /** history.onVisited: idempotent upsert; a failure marks reconcile due instead of losing the visit. */
     async onVisited(item: HistoryItemLike): Promise<void> {
-      if (!isHttpUrl(item.url) || !hasValidConsent(await deps.state.read())) return;
+      if (!isHttpUrl(item.url)) return;
+      const st = await deps.state.read();
+      if (!hasValidConsent(st) || st.settings.paused) return; // paused visits are picked up by the reconcile that runs on resume
       const row = toRow(item);
       if (!row) return;
       try {
         await deps.engine.call({ method: 'upsertHistory', params: { rows: [row] } });
+        // Chrome reports a visit before the page has a title: ask history again shortly after (one alarm, not reset by further visits)
+        if (!item.title && !(await deps.alarms.get(ALARM_TITLE_REFRESH))) await deps.alarms.create(ALARM_TITLE_REFRESH, { delayInMinutes: 0.5 });
       } catch {
         await deps.state.update((s) => ({ ...s, reconcileDue: true }));
       }
@@ -118,7 +127,8 @@ export function createPipeline(deps: PipelineDeps) {
 
     /** history.onVisitRemoved with the ADR-006 expiry guard. */
     async onVisitRemoved(removal: Removal): Promise<void> {
-      if (!hasValidConsent(await deps.state.read())) return;
+      const st = await deps.state.read();
+      if (!hasValidConsent(st) || !st.settings.mirrorDeletion) return; // mirrored deletion switched off: Chrome's deletions leave the archive alone
       if (!removal.allHistory && removal.urls.length === 0) return; // partial-visit deletion: the URL still exists
       const stored = removal.allHistory ? new Map<string, number>() : new Map((await deps.engine.call({ method: 'lastVisits', params: { urls: removal.urls } })).map((r) => [r.url, r.lastVisit]));
       const plan = planRemoval(removal, stored, deps.now());
@@ -133,12 +143,33 @@ export function createPipeline(deps: PipelineDeps) {
         return;
       }
       try {
-        if (name === ALARM_IMPORT_WATCHDOG) await resumeImport();
-        else if (name === ALARM_RECONCILE) await runReconcile(importDeps());
+        if (name === ALARM_IMPORT_WATCHDOG) {
+          if (!s.settings.paused) await resumeImport();
+        } else if (name === ALARM_TITLE_REFRESH) {
+          if (!s.settings.paused) await importRange(importDeps(), deps.now() - TITLE_REFRESH_WINDOW_MS, deps.now() + 1);
+        } else if (name === ALARM_RECONCILE) {
+          if (!s.settings.paused) await runReconcile(importDeps());
+        }
         else if (name === ALARM_MAINTENANCE) await runMaintenance({ engine: deps.engine, state: deps.state, now: deps.now });
       } finally {
         await syncAlarms();
       }
+    },
+
+    async settings(): Promise<Settings> {
+      return (await deps.state.read()).settings;
+    },
+
+    /** Applies a validated patch. Pausing stops the import cleanly; resuming continues it or reconciles the paused gap. */
+    async updateSettings(patch: SettingsPatch): Promise<Settings> {
+      const before = (await deps.state.read()).settings;
+      const next = await deps.state.update((s) => ({ ...s, settings: { ...s.settings, ...patch } }));
+      if (patch.paused === true && !before.paused) stopRequested = true;
+      if (patch.paused === false && before.paused && hasValidConsent(next)) {
+        if (next.import.status !== 'complete') void resumeImport();
+        else void runReconcile(importDeps()).catch(() => undefined);
+      }
+      return next.settings;
     },
 
     /** for tests */
