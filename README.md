@@ -1,7 +1,7 @@
 # Browser Recall
 **Find anything you've seen before.** A privacy-first Chrome extension (Manifest V3) that turns your browsing history into a fast, local, searchable memory. No account, no backend, no telemetry, no paid AI — your browsing data never leaves the device.
 
-Status: **M2 (engine core) complete** — the local search engine exists; history import (M3) and the search UI (M4) come next. See `docs/HANDOFF.md`.
+Status: **M3 (history pipeline + consent) complete** — a consenting user's history is imported and kept in sync locally; the search UI (M4) comes next. See `docs/HANDOFF.md`.
 
 ## Develop
 ```

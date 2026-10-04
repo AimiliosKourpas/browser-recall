@@ -1,13 +1,78 @@
 {
-  "extName": { "message": "Browser Recall", "description": "Extension name" },
-  "extDescription": { "message": "Find any page you've seen before. Private and local, no account.", "description": "Extension description (store short description is set separately)" },
-  "actionTitle": { "message": "Search your browsing memory", "description": "Toolbar button tooltip" },
-  "cmdOpenSearch": { "message": "Open search", "description": "Keyboard command description" },
-  "searchPageTitle": { "message": "Browser Recall", "description": "Search page <title>" },
-  "searchInputLabel": { "message": "Search your browsing memory", "description": "Accessible label of the search input" },
-  "searchEngineStarting": { "message": "Starting the local search engine…", "description": "Status while the offscreen engine starts" },
-  "searchEngineReady": { "message": "Local search engine ready.", "description": "Status when the engine answered" },
-  "searchEngineError": { "message": "The local search engine could not be started.", "description": "Status when the engine did not answer" },
-  "onboardingPageTitle": { "message": "Welcome to Browser Recall", "description": "Onboarding page <title> and heading" },
-  "onboardingBody": { "message": "Browser Recall is installed. Everything stays on this device. Setup arrives in an upcoming update.", "description": "Placeholder onboarding text (consent flow is a later milestone)" }
+  "extName": {
+    "message": "Browser Recall",
+    "description": "Extension name"
+  },
+  "extDescription": {
+    "message": "Find any page you've seen before. Private and local, no account.",
+    "description": "Extension description (store short description is set separately)"
+  },
+  "actionTitle": {
+    "message": "Search your browsing memory",
+    "description": "Toolbar button tooltip"
+  },
+  "cmdOpenSearch": {
+    "message": "Open search",
+    "description": "Keyboard command description"
+  },
+  "searchPageTitle": {
+    "message": "Browser Recall",
+    "description": "Search page <title>"
+  },
+  "searchInputLabel": {
+    "message": "Search your browsing memory",
+    "description": "Accessible label of the search input"
+  },
+  "searchEngineStarting": {
+    "message": "Starting the local search engine…",
+    "description": "Status while the offscreen engine starts"
+  },
+  "searchEngineReady": {
+    "message": "Local search engine ready.",
+    "description": "Status when the engine answered"
+  },
+  "searchEngineError": {
+    "message": "The local search engine could not be started.",
+    "description": "Status when the engine did not answer"
+  },
+  "onboardingPageTitle": {
+    "message": "Welcome to Browser Recall",
+    "description": "Onboarding page <title> and heading"
+  },
+  "onboardingConsentIntro": {
+    "message": "To make your history searchable, Browser Recall reads your Chrome browsing history (page titles, addresses and visit times) and stores a private copy on this device. It never sends it anywhere.",
+    "description": "Consent screen: what is read and where it goes (PRODUCT_SPEC §5.1)"
+  },
+  "onboardingConsentHeadsUp": {
+    "message": "Chrome's install prompt says the extension can \"change\" your history. That wording covers delete features; Browser Recall only removes its own copy when you delete history in Chrome or ask it to.",
+    "description": "Consent screen: explains the Chrome permission wording"
+  },
+  "onboardingAllow": {
+    "message": "Allow and import history",
+    "description": "Consent button (affirmative action)"
+  },
+  "onboardingDecline": {
+    "message": "No thanks",
+    "description": "Consent decline button"
+  },
+  "onboardingDeclined": {
+    "message": "Browser Recall will stay inactive and will not read your history. You can allow it later from this page.",
+    "description": "Shown after declining"
+  },
+  "onboardingImporting": {
+    "message": "Importing your history. You can close this page: the import continues in the background and resumes if the browser restarts.",
+    "description": "Shown while the import runs"
+  },
+  "onboardingImportedCount": {
+    "message": "Pages imported so far:",
+    "description": "Label before the imported page count"
+  },
+  "onboardingDone": {
+    "message": "Import complete. Browser Recall keeps your history up to date. Everything stays on this device.",
+    "description": "Shown when the import has finished"
+  },
+  "onboardingError": {
+    "message": "Something went wrong talking to the background service. Please reload this page.",
+    "description": "Shown when the status request fails"
+  }
 }

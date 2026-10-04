@@ -10,3 +10,7 @@ Decision (prototype + tests: spikes/engine/deletion-policy.ts):
 - Setting "mirror deletions" (default on) and an "also mirror old removals" override.
 - Empty list → no-op. Unknown URL → no-op.
 Residual risk: a user deliberately deleting a >85-day-old entry (only possible for synced/archived entries) is not mirrored. Not tested: History-page UI and remote (sync) deletions.
+
+## M3 implementation record (docs/milestones/M3-RESULTS.md)
+Implemented in `src/background/pipeline/deletion.ts` + `controller.ts` (`onVisitRemoved`), using the engine's new read-only `lastVisits(urls)`: `allHistory` → `deleteAllExceptSaved`; URL list → each URL whose STORED last visit is within 85 days is deleted (`deleteUrls`; saved pages only lose their history flag), older ones are ignored as Chrome expiry; unknown URLs and empty lists (partial-visit deletions) are no-ops. Guard value 85 days; "mirror deletions" and "guard" switches exist in `planRemoval` but are fixed on until the M8 settings UI.
+End-to-end proof (real Chromium 141 and Chrome 116): 70 rows 100 days old are imported, Chrome's own expiry job then removes them from `chrome.history`, and all 70 stay searchable. **Mutation check**: with the guard disabled the same test fails (0 of 70 remain), i.e. the test exercises the real expiry events and the guard is what preserves the archive.

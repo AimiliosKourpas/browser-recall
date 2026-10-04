@@ -6,6 +6,7 @@ import { isTrustedExtensionPage, swMessageSchema, type Result, type SenderLike, 
 export interface RouterDeps {
   ensureEngine: () => Promise<EngineInfo>;
   engineCall: (call: EngineCall) => Promise<unknown>;
+  pipeline: { grantConsent(version: number): Promise<void>; revokeConsent(): Promise<void>; status(): Promise<unknown> };
   openSearch: () => Promise<void>;
 }
 
@@ -26,6 +27,14 @@ export async function routeMessage(message: SwMessage, deps: RouterDeps): Promis
         return { ok: true, data: await deps.ensureEngine() };
       case 'sw/engine':
         return { ok: true, data: await deps.engineCall(message.call) };
+      case 'sw/grant-consent':
+        await deps.pipeline.grantConsent(message.version);
+        return { ok: true, data: await deps.pipeline.status() };
+      case 'sw/revoke-consent':
+        await deps.pipeline.revokeConsent();
+        return { ok: true, data: await deps.pipeline.status() };
+      case 'sw/pipeline-status':
+        return { ok: true, data: await deps.pipeline.status() };
       case 'sw/open-search':
         await deps.openSearch();
         return { ok: true, data: { opened: true } };
