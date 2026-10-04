@@ -214,5 +214,89 @@
   "actionDeleteSnippet": {
     "message": "Delete snippet",
     "description": "Row action for snippets"
+  },
+  "settingsPageTitle": {
+    "message": "Deep Search",
+    "description": "Settings page title"
+  },
+  "settingsDeepIntro": {
+    "message": "Deep Search lets Browser Recall also index the text of pages you open, so you can find a page by what it says, not only by its title and address. It is off by default. The text is stored only on this device and is never sent anywhere.",
+    "description": "Deep Search intro"
+  },
+  "settingsDeepPermission": {
+    "message": "Turning it on asks Chrome for access to the websites you visit, so the text of a page can be read after it loads. You can turn it off, or remove that access, at any time; History and Saved keep working either way.",
+    "description": "Deep Search permission explanation"
+  },
+  "settingsDeepSkips": {
+    "message": "Skipped automatically: private windows, pages with password or payment-card fields, local and intranet addresses, non-HTML files, and sites you exclude below.",
+    "description": "What Deep Search skips"
+  },
+  "settingsDeepOn": {
+    "message": "Deep Search is on.",
+    "description": "Status on"
+  },
+  "settingsDeepOff": {
+    "message": "Deep Search is off.",
+    "description": "Status off"
+  },
+  "settingsDeepNoPermission": {
+    "message": "Chrome access to websites was removed, so Deep Search is paused.",
+    "description": "Status when permission was removed"
+  },
+  "settingsDeepNeedsConsent": {
+    "message": "Finish the history setup first (the Browser Recall welcome page).",
+    "description": "Needs consent"
+  },
+  "settingsDeepEnable": {
+    "message": "Turn on Deep Search",
+    "description": "Enable button"
+  },
+  "settingsDeepDisable": {
+    "message": "Turn off Deep Search",
+    "description": "Disable button"
+  },
+  "settingsDeepDenied": {
+    "message": "Access was not granted, so Deep Search stays off.",
+    "description": "Shown when the user denies the permission prompt"
+  },
+  "settingsDeepError": {
+    "message": "Something went wrong. Deep Search is unchanged.",
+    "description": "Generic error"
+  },
+  "settingsExcludeTitle": {
+    "message": "Excluded sites",
+    "description": "Heading of the excluded sites list"
+  },
+  "settingsExcludeHelp": {
+    "message": "Pages on these sites are never captured, and text already captured from them is deleted.",
+    "description": "Excluded sites help"
+  },
+  "settingsExcludeLabel": {
+    "message": "Site to exclude (for example example.com)",
+    "description": "Input label"
+  },
+  "settingsExcludeAdd": {
+    "message": "Exclude site",
+    "description": "Button"
+  },
+  "settingsExcludeRemove": {
+    "message": "Stop excluding",
+    "description": "Button"
+  },
+  "settingsExcludeNone": {
+    "message": "No excluded sites.",
+    "description": "Empty list"
+  },
+  "settingsClear": {
+    "message": "Delete all Deep Search text",
+    "description": "Button"
+  },
+  "settingsClearDone": {
+    "message": "Deep Search text deleted. History and Saved are unchanged.",
+    "description": "After clearing"
+  },
+  "footerSettings": {
+    "message": "Deep Search settings",
+    "description": "Footer link to the settings page"
   }
 }

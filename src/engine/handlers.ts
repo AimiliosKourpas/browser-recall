@@ -25,6 +25,8 @@ async function dispatch(call: EngineCall, ctx: HandlerContext): Promise<unknown>
       return store.addSnippet(call.params);
     case 'unsavePage':
       return store.unsavePage(call.params.url);
+    case 'clearDeepContent':
+      return store.clearDeepContent(call.params.domain);
     case 'deleteSnippet':
       return store.deleteSnippet(call.params.id);
     case 'search':

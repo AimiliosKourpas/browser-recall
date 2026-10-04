@@ -105,3 +105,4 @@ mark { background: color-mix(in srgb, #f5c542 55%, transparent); color: inherit;
 .approx { font-size: 0.85rem; color: var(--muted); margin: 0.8rem 0 0.2rem; font-weight: 600; }
 .actions { display: flex; gap: 0.5rem; margin-top: 0.6rem; }
 .footer { margin-top: 0.8rem; font-size: 0.8rem; border-top: 1px solid var(--border); padding-top: 0.4rem; }
+.footer .link { border: 0; padding: 0; background: none; color: var(--accent); text-decoration: underline; font-size: inherit; }

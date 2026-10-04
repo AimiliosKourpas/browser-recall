@@ -14,6 +14,13 @@ export const swMessageSchema = z.discriminatedUnion('type', [
   /** Remember / save-selection for a tab (also what the context menu and the keyboard command do); no tabId = the active tab */
   z.object({ type: z.literal('sw/remember-tab'), tabId: z.number().int().nonnegative().optional() }),
   z.object({ type: z.literal('sw/save-selection'), tabId: z.number().int().nonnegative().optional() }),
+  /** Deep Search settings (M6). Enable is verified against the actual permission by the service worker. */
+  z.object({ type: z.literal('sw/deep-status') }),
+  z.object({ type: z.literal('sw/deep-enable') }),
+  z.object({ type: z.literal('sw/deep-disable') }),
+  z.object({ type: z.literal('sw/deep-exclude'), domain: z.string().min(1).max(255) }),
+  z.object({ type: z.literal('sw/deep-include'), domain: z.string().min(1).max(255) }),
+  z.object({ type: z.literal('sw/deep-clear') }),
   /** any validated engine call (search, writes, deletes, maintenance…) */
   z.object({ type: z.literal('sw/engine'), call: engineCallSchema }),
 ]);
@@ -33,6 +40,8 @@ export type Result<T> = { ok: true; data: T } | { ok: false; error: z.infer<type
 export const ensureEngineResultSchema = resultSchema(engineInfoSchema);
 export const engineCallResultSchema = resultSchema(z.unknown());
 export const openSearchResultSchema = resultSchema(z.object({ opened: z.literal(true) }));
+export const deepStatusSchema = z.object({ enabled: z.boolean(), permission: z.boolean(), consent: z.boolean(), excluded: z.array(z.string()) });
+export const deepStatusResultSchema = resultSchema(deepStatusSchema);
 export const pipelineStatusSchema = z.object({
   consent: z.enum(['none', 'granted', 'outdated']),
   importStatus: z.enum(['idle', 'running', 'complete']),

@@ -28,6 +28,10 @@ export const stateSchema = z.object({
   reconcileDue: z.boolean(),
   lastMaintenanceAt: ms.nullable(),
   lastIntegrity: z.object({ at: ms, ok: z.boolean() }).nullable(),
+  /** Deep Search (M6): OFF by default; `enabled` is only ever set after the optional host permission was verified. */
+  deep: z
+    .object({ enabled: z.boolean(), enabledAt: ms.nullable(), excluded: z.array(z.string().max(255)).max(500) })
+    .default({ enabled: false, enabledAt: null, excluded: [] }),
 });
 export type PipelineState = z.infer<typeof stateSchema>;
 
@@ -38,6 +42,7 @@ export const defaultState = (): PipelineState => ({
   reconcileDue: false,
   lastMaintenanceAt: null,
   lastIntegrity: null,
+  deep: { enabled: false, enabledAt: null, excluded: [] },
 });
 
 export interface StorageLike {

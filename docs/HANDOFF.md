@@ -1,4 +1,6 @@
-# Handoff (after M5)
+# Handoff (after M6)
+
+**M6 done on `claude/m6-deep-search`** (from the M5 branch; see `docs/milestones/M6-RESULTS.md`, ADR-014): Deep Search capture, `settings.html`, `clearDeepContent`, `br:state.deep`. Chain: main → m4-search-ui → m5-remember-saved → m6-deep-search; nothing merged to main. **Before publishing**: manually test the real optional-permission prompt (grant, deny, remove in `chrome://extensions`). Next: M7.
 
 **M5 done on `claude/m5-remember-saved`** (from the M4 branch; see `docs/milestones/M5-RESULTS.md`): Remember / Save selection (context menu, `remember-page` command, `sw/remember-tab`, `sw/save-selection`), extractor v1 (`src/capture/extractor.ts`, reusable by M6), text fragments, `unsavePage`/`deleteSnippet`. **E2E needs both builds**: `npm run build && npm run build:e2e` (the e2e build adds `host_permissions: http://fixture.test/*`; use `launchExtension(dir, {e2e:true})` and `fixtureOrigin(server)`).
 
