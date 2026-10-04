@@ -187,6 +187,40 @@ export class SearchStore {
     return { skipped: false };
   }
 
+  /**
+   * "Remove from saved": clears the saved flag. A page still in Chrome history keeps its history row (title/URL searchable) but
+   * loses the text that was stored for the saved item; a page that only existed because it was saved is deleted. Snippets are
+   * separate saved items and are not touched here.
+   */
+  unsavePage(url: string): { changed: boolean; removed: 'none' | 'page' | 'saved-flag' } {
+    const norm = normalizeUrl(url);
+    const row = norm ? this.first('SELECT id, flags FROM pages WHERE url = ?', [norm.url]) : undefined;
+    if (!row || !(Number(row[1]) & PAGE_FLAGS.saved)) return { changed: false, removed: 'none' };
+    const id = Number(row[0]);
+    let removed: 'page' | 'saved-flag' = 'saved-flag';
+    this.db.transaction(() => {
+      if (Number(row[1]) & PAGE_FLAGS.history) {
+        this.run({ sql: 'DELETE FROM contents WHERE page_id = ?', bind: [id] });
+        this.run({ sql: `UPDATE pages SET flags = flags & ${~(PAGE_FLAGS.saved | PAGE_FLAGS.content) & 7}, saved_at = NULL, content_hash = NULL, content_indexed_at = NULL WHERE id = ?`, bind: [id] });
+        this.reindex(id);
+      } else {
+        this.removePages([id]);
+        removed = 'page';
+      }
+    });
+    return { changed: true, removed };
+  }
+
+  deleteSnippet(id: number): { deleted: boolean } {
+    const exists = this.first('SELECT 1 FROM snippets WHERE id = ?', [id]);
+    if (!exists) return { deleted: false };
+    this.db.transaction(() => {
+      this.run({ sql: 'DELETE FROM fts_snip WHERE rowid = ?', bind: [id] });
+      this.run({ sql: 'DELETE FROM snippets WHERE id = ?', bind: [id] });
+    });
+    return { deleted: true };
+  }
+
   /** Saved quote. Never expires and survives page deletion. Over-long text is truncated and flagged. */
   addSnippet(input: AddSnippetInput): { id: number; truncated: boolean } | { skipped: true } {
     const norm = normalizeUrl(input.url);

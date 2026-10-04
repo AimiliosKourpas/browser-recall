@@ -48,6 +48,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install chromium --with-deps
       - run: npm run build
+      - run: npm run build:e2e
       - run: xvfb-run -a npm run e2e
 
   compat-minimum-chrome:
@@ -61,6 +62,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
+      - run: npm run build:e2e
       - name: Install Chrome for Testing 116
         run: |
           curl -fsSL -o chrome116.zip https://storage.googleapis.com/chrome-for-testing-public/116.0.5845.96/linux64/chrome-linux64.zip

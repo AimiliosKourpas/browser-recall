@@ -6,9 +6,9 @@ const require = createRequire(import.meta.url);
 
 export default defineConfig({
   srcDir: 'src',
-  outDir: '.output',
+  outDir: process.env.BR_E2E ? '.output-e2e' : '.output',
   manifestVersion: 3,
-  manifest: () => buildManifest(),
+  manifest: () => buildManifest({ e2e: !!process.env.BR_E2E }),
   vite: () => ({
     esbuild: { jsx: 'automatic', jsxImportSource: 'preact' },
     build: { sourcemap: false },

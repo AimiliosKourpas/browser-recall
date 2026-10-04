@@ -21,7 +21,8 @@
     "e2e": "playwright test",
     "check": "npm run typecheck && npm run lint && npm run test && npm run test:eval && npm run build && npm run test:built && npm run size",
     "test:eval": "vitest run --config vitest.eval.config.ts",
-    "test:perf": "vitest run --config vitest.perf.config.ts"
+    "test:perf": "vitest run --config vitest.perf.config.ts",
+    "build:e2e": "BR_E2E=1 wxt build"
   },
   "dependencies": {
     "@sqlite.org/sqlite-wasm": "^3.53.4-build2",
@@ -37,6 +38,7 @@
     "axe-core": "^4.10.0",
     "eslint": "^9.0.0",
     "fast-check": "^4.10.2",
+    "linkedom": "^0.18.13",
     "size-limit": "^11.2.0",
     "typescript": "~5.9.0",
     "typescript-eslint": "^8.40.0",

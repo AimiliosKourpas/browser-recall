@@ -6,6 +6,8 @@ import { join, resolve } from 'node:path';
 import { startFixtureServer, type FixtureServer } from './fixtures-server';
 
 export const EXTENSION_DIR = resolve(import.meta.dirname, '../.output/chrome-mv3');
+/** build with `npm run build:e2e`: the production manifest plus a host permission for http://fixture.test/* (see src/manifest.ts) */
+export const E2E_EXTENSION_DIR = resolve(import.meta.dirname, '../.output-e2e/chrome-mv3');
 
 interface Fixtures {
   context: BrowserContext;

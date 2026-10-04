@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { EXTENSION_PAGES_CSP, buildManifest } from '../src/manifest';
+import { EXTENSION_PAGES_CSP, E2E_HOST_PERMISSIONS, buildManifest } from '../src/manifest';
 
 // Deliberate, ADR-001-backed allowlist. Changing the manifest permissions/hosts/CSP requires editing THIS file (and the ADR).
 const ALLOWED_PERMISSIONS = ['history', 'storage', 'unlimitedStorage', 'contextMenus', 'activeTab', 'scripting', 'offscreen', 'alarms'];
@@ -20,6 +20,11 @@ describe('manifest allowlist (ADR-001)', () => {
   });
   it('broad host access is optional only', () => {
     expect([...m.optional_host_permissions]).toEqual(ALLOWED_OPTIONAL_HOSTS);
+  });
+  it('the production manifest has no host_permissions; only the e2e build adds the fixture host', () => {
+    expect(buildManifest()).not.toHaveProperty('host_permissions');
+    expect(buildManifest({ e2e: true }).host_permissions).toEqual([...E2E_HOST_PERMISSIONS]);
+    expect(E2E_HOST_PERMISSIONS).toEqual(['http://fixture.test/*']);
   });
   it('minimum Chrome version is declared', () => {
     expect(m.minimum_chrome_version).toBe('116');

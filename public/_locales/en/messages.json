@@ -194,5 +194,25 @@
   "searchWorking": {
     "message": "Searching…",
     "description": "Loading state"
+  },
+  "cmdRememberPage": {
+    "message": "Remember this page",
+    "description": "Keyboard command description"
+  },
+  "menuRemember": {
+    "message": "Remember this page",
+    "description": "Context menu item"
+  },
+  "menuSnippet": {
+    "message": "Save selection to memory",
+    "description": "Context menu item"
+  },
+  "actionUnsave": {
+    "message": "Remove from saved",
+    "description": "Row action for saved pages"
+  },
+  "actionDeleteSnippet": {
+    "message": "Delete snippet",
+    "description": "Row action for snippets"
   }
 }

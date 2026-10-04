@@ -23,6 +23,10 @@ async function dispatch(call: EngineCall, ctx: HandlerContext): Promise<unknown>
       return store.savePage(call.params);
     case 'addSnippet':
       return store.addSnippet(call.params);
+    case 'unsavePage':
+      return store.unsavePage(call.params.url);
+    case 'deleteSnippet':
+      return store.deleteSnippet(call.params.id);
     case 'search':
       return store.search(call.params);
     case 'suggest':

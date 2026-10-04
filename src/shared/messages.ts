@@ -11,6 +11,9 @@ export const swMessageSchema = z.discriminatedUnion('type', [
   z.object({ type: z.literal('sw/grant-consent'), version: z.number().int().positive() }),
   z.object({ type: z.literal('sw/revoke-consent') }),
   z.object({ type: z.literal('sw/pipeline-status') }),
+  /** Remember / save-selection for a tab (also what the context menu and the keyboard command do); no tabId = the active tab */
+  z.object({ type: z.literal('sw/remember-tab'), tabId: z.number().int().nonnegative().optional() }),
+  z.object({ type: z.literal('sw/save-selection'), tabId: z.number().int().nonnegative().optional() }),
   /** any validated engine call (search, writes, deletes, maintenance…) */
   z.object({ type: z.literal('sw/engine'), call: engineCallSchema }),
 ]);
